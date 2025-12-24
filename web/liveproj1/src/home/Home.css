@@ -1,0 +1,322 @@
+/* ================= RESET ================= */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: #fafafa;
+}
+
+/* ================= LAYOUT ================= */
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 220px;
+  background: #fff;
+  border-right: 1px solid #ddd;
+  padding: 20px;
+}
+
+/* 🔥 SIDEBAR HFUN (LOGO STYLE) */
+.sidebar h1 {
+  font-size: 30px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, #ff0066, #ffcc00);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 28px;
+  cursor: pointer;
+}
+
+.sidebar div {
+  padding: 12px;
+  cursor: pointer;
+  border-radius: 8px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.sidebar div:hover {
+  background: #f2f2f2;
+}
+
+.content {
+  flex: 1;
+  background: #fafafa;
+  overflow-y: auto;
+}
+
+/* ❤️ TOP BAR HFUN ANIMATION */
+.top-bar {
+  position: relative;
+  padding: 16px 20px;
+  font-size: 28px;
+  font-weight: 600;
+  color: #222;
+  background: #fff;
+  border-bottom: 1px solid #ddd;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+/* Heart icon */
+.top-bar::before {
+  content: "❤";
+  font-size: 32px;
+  color: #ff2d55;
+  margin-right: 10px;
+  animation: heart-pulse 1.5s infinite ease-in-out;
+}
+
+/* Animate Hfun text */
+.top-bar {
+  animation: hfun-slide 3s infinite ease-in-out;
+}
+
+/* Slide in & out animation */
+@keyframes hfun-slide {
+  0% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  50% {
+    transform: translateX(12px);
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+}
+
+/* Heart pulse animation */
+@keyframes heart-pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+
+/* ================= HOME FEED ================= */
+.home-feed {
+  max-width: 600px;
+  margin: auto;
+  padding: 20px;
+}
+
+.insta-post {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+  margin-bottom: 30px;
+  overflow: hidden;
+}
+
+.post-header {
+  padding: 12px;
+  font-weight: bold;
+}
+
+.post-image {
+  width: 100%;
+  max-height: 500px;
+  object-fit: cover;
+}
+
+.post-actions {
+  display: flex;
+  gap: 18px;
+  padding: 12px;
+  font-size: 22px;
+}
+
+.post-actions svg {
+  cursor: pointer;
+}
+
+.post-info {
+  padding: 0 12px 12px;
+  font-size: 14px;
+}
+
+.comment-box {
+  display: flex;
+  gap: 10px;
+  padding: 12px;
+}
+
+.comment-box input {
+  flex: 1;
+  padding: 8px;
+  border-radius: 20px;
+  border: 1px solid #ccc;
+}
+
+.comment-box button {
+  border: none;
+  background: #0095f6;
+  color: white;
+  padding: 8px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+}
+
+/* ================= STORIES ================= */
+.stories-page {
+  display: flex;
+  gap: 16px;
+  padding: 20px;
+}
+
+.story-item {
+  text-align: center;
+  cursor: pointer;
+}
+
+.story-ring {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  border: 3px solid #ff0066;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.story-ring img {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* ================= REELS ================= */
+.reels-wrapper {
+  height: calc(100vh - 20px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: black;
+}
+
+.reel-card {
+  position: relative;
+  width: 380px;
+  height: 100%;
+  max-height: 90vh;
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.reel-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: black;
+}
+
+/* ================= SEARCH ================= */
+.search-page {
+  padding: 20px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px 15px;
+  border-radius: 10px;
+  border: 1px solid #dbdbdb;
+  outline: none;
+  font-size: 16px;
+  margin-bottom: 20px;
+}
+
+/* ================= MOBILE ================= */
+.mobile-nav {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    display: none;
+  }
+
+  .mobile-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background: #fff;
+    border-top: 1px solid #ddd;
+    justify-content: space-around;
+    padding: 10px;
+    font-size: 24px;
+  }
+
+  .reel-card {
+    width: 100%;
+    height: 100vh;
+    border-radius: 0;
+  }
+}
+
+
+
+
+
+
+/* ================= STORY VIEWER ================= */
+
+.story-viewer {
+  position: fixed;
+  inset: 0;
+  background: black;
+  z-index: 1000;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.story-viewer img {
+  max-width: 90%;
+  max-height: 80%;
+  border-radius: 12px;
+}
+
+.story-viewer p {
+  color: white;
+  margin-top: 12px;
+  font-size: 16px;
+}
+
+.story-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  font-size: 26px;
+  color: white;
+  cursor: pointer;
+}
