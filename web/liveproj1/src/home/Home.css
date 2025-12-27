@@ -6,7 +6,7 @@
 }
 
 body {
-  font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: 'Poppins', sans-serif;
   background: #fafafa;
   color: #222;
 }
@@ -29,6 +29,7 @@ body {
   padding: 20px;
   box-sizing: border-box;
   z-index: 20;
+  font-family: 'Fredoka One', cursive; /* playful font */
 }
 
 /* Sidebar Logo */
@@ -44,6 +45,7 @@ body {
   cursor: pointer;
   text-align: center;
   display: inline-block;
+  position: relative;
   animation: hfun-slide-sidebar 3s infinite ease-in-out;
 }
 
@@ -57,7 +59,7 @@ body {
   animation: heart-pulse 1.5s infinite ease-in-out;
 }
 
-/* Sidebar Menu Items */
+/* ================= SIDEBAR MENU ================= */
 .sidebar div {
   padding: 14px 12px;
   cursor: pointer;
@@ -65,39 +67,55 @@ body {
   display: flex;
   gap: 12px;
   align-items: center;
-  font-weight: 500;
   font-size: 18px;
-  font-family: 'Roboto', sans-serif;
-  color: #333;
-  transition: 0.3s all;
-  animation: menu-slide 3s infinite ease-in-out;
+  font-weight: 700;
+  background-clip: text;
+  color: transparent;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.3s ease-in-out;
+  animation: menu-slide 3s infinite ease-in-out alternate;
+  background-size: 200% 200%;
+  background-position: 0% 50%;
 }
 
+/* Gradient per menu item */
+.sidebar div:nth-child(2) { background-image: linear-gradient(135deg, #ff4500, #ff8c00); } /* Home */
+.sidebar div:nth-child(3) { background-image: linear-gradient(135deg, #1e90ff, #00bfff); } /* Search */
+.sidebar div:nth-child(4) { background-image: linear-gradient(135deg, #32cd32, #00fa9a); } /* Messages */
+.sidebar div:nth-child(5) { background-image: linear-gradient(135deg, #ff69b4, #ff1493); } /* Stories */
+.sidebar div:nth-child(6) { background-image: linear-gradient(135deg, #ff8c00, #ffa500); } /* Reels */
+.sidebar div:nth-child(7) { background-image: linear-gradient(135deg, #8a2be2, #9400d3); } /* Upload */
+.sidebar div:nth-child(8) { background-image: linear-gradient(135deg, #00ced1, #20b2aa); } /* Profile */
+.sidebar div:nth-child(9) { background-image: linear-gradient(135deg, #dc143c, #ff6347); } /* Logout */
+
+/* Hover effect */
 .sidebar div:hover {
-  background: #f2f2f2;
-  font-weight: 600;
+  transform: scale(1.05);
+  filter: drop-shadow(0 0 6px #ff4500);
+}
+
+/* Logout hover */
+.sidebar div:nth-child(9):hover {
+  filter: drop-shadow(0 0 8px #dc143c);
 }
 
 /* ================= ICON COLORS ================= */
 .sidebar div svg {
   font-size: 22px;
-  transition: 0.3s all;
+  color: white;
+  transition: transform 0.3s ease-in-out, color 0.3s ease-in-out;
 }
 
-/* Assign different colors per menu item using nth-child */
-.sidebar div:nth-child(2) svg { color: #ff4500; }  /* Home */
-.sidebar div:nth-child(3) svg { color: #1e90ff; }  /* Search */
-.sidebar div:nth-child(4) svg { color: #32cd32; }  /* Messages */
-.sidebar div:nth-child(5) svg { color: #ff69b4; }  /* Stories */
-.sidebar div:nth-child(6) svg { color: #ff8c00; }  /* Reels */
-.sidebar div:nth-child(7) svg { color: #8a2be2; }  /* Upload */
-.sidebar div:nth-child(8) svg { color: #00ced1; }  /* Profile */
+.sidebar div:hover svg {
+  transform: scale(1.2);
+}
 
 /* ================= TOP BAR ================= */
 .top-bar {
   position: fixed;
   top: 0;
-  left: 220px; /* sidebar width */
+  left: 220px;
   right: 0;
   height: 60px;
   padding: 16px 20px;
@@ -118,10 +136,6 @@ body {
   color: #ff2d55;
   margin-right: 10px;
   animation: heart-pulse 1.5s infinite ease-in-out;
-}
-
-.top-bar {
-  animation: hfun-slide 3s infinite ease-in-out;
 }
 
 /* ================= ANIMATIONS ================= */
@@ -148,11 +162,9 @@ body {
 }
 
 @keyframes menu-slide {
-  0% { transform: translateX(0); opacity: 0.85; }
-  20% { opacity: 1; }
-  50% { transform: translateX(4px); opacity: 1; }
-  80% { opacity: 1; }
-  100% { transform: translateX(0); opacity: 0.85; }
+  0% { transform: translateX(0px); }
+  50% { transform: translateX(-8px); }
+  100% { transform: translateX(0px); }
 }
 
 /* ================= CONTENT ================= */

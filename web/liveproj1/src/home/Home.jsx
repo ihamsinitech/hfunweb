@@ -46,6 +46,12 @@ export default function Home() {
 
   const token = localStorage.getItem("token");
 
+  /* ================= LOGOUT (ADDED) ================= */
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    window.location.href = "/";
+  };
+
   /* ================= FETCH ================= */
 
   const fetchPosts = async () => {
@@ -219,45 +225,45 @@ export default function Home() {
           }
         >
           <div className="story-ring">
-             {myStory ? (
-               <img src={myStory.image} alt="" />
-             ) : (
-               <span style={{ fontSize: "30px", color: "#ff0066" }}>+</span>
-             )}
-           </div>
-        <p>Your Story</p>
+            {myStory ? (
+              <img src={myStory.image} alt="" />
+            ) : (
+              <span style={{ fontSize: "30px", color: "#ff0066" }}>+</span>
+            )}
+          </div>
+          <p>Your Story</p>
 
-           {!myStory && (
-             <input
-               hidden
-               ref={storyInputRef}
-               type="file"
-               accept="image/*"
-               onChange={uploadStory}
-             />
-           )}
-         </div>
+          {!myStory && (
+            <input
+              hidden
+              ref={storyInputRef}
+              type="file"
+              accept="image/*"
+              onChange={uploadStory}
+            />
+          )}
+        </div>
 
-         {otherStories.map((s) => (
-           <div
-             key={s.id}
+        {otherStories.map((s) => (
+          <div
+            key={s.id}
             className="story-item"
-             onClick={() => setActiveStory(s)}
-           >
-             <div className="story-ring">
-               <img src={s.image} alt="" />
-             </div>
-             <p>{s.user}</p>
-           </div>
+            onClick={() => setActiveStory(s)}
+          >
+            <div className="story-ring">
+              <img src={s.image} alt="" />
+            </div>
+            <p>{s.user}</p>
+          </div>
         ))}
 
-         {activeStory && (
-           <div className="story-viewer">
-             <span
-               className="story-close"
-               onClick={() => setActiveStory(null)}
-             >
-               ✕
+        {activeStory && (
+          <div className="story-viewer">
+            <span
+              className="story-close"
+              onClick={() => setActiveStory(null)}
+            >
+              ✕
             </span>
             <img src={activeStory.image} alt="" />
             <p>{activeStory.user}</p>
@@ -265,11 +271,9 @@ export default function Home() {
         )}
       </div>
     );
-       };
+  };
 
-
-
-  /* ================= REELS (RESTORED) ================= */
+  /* ================= REELS ================= */
 
   const renderReels = () => {
     const videoPosts = posts.filter((p) => p.video);
@@ -286,8 +290,11 @@ export default function Home() {
             <video
               src={r.video}
               className="post-image"
-              controls
+              autoPlay
+              muted
               loop
+              playsInline
+              preload="metadata"
             />
 
             <div className="post-actions">
@@ -399,6 +406,7 @@ export default function Home() {
     <div className="layout">
       <aside className="sidebar">
         <h1>Hfun</h1>
+
         <div onClick={() => setActiveTab("home")}>
           <AiFillHome /> Home
         </div>
@@ -420,6 +428,12 @@ export default function Home() {
         <div onClick={() => setActiveTab("profile")}>
           <RiUser3Line /> Profile
         </div>
+
+        {/* ✅ LOGOUT ADDED */}
+        <div onClick={handleLogout} className="logout-btn">
+          Logout
+        </div>
+
       </aside>
 
       <main className="content">
