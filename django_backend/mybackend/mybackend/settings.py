@@ -34,7 +34,19 @@ INSTALLED_APPS = [
     "rest_framework",
 
     "core",
+    # ✅ ADD THIS (DO NOT REMOVE ANYTHING ABOVE)
+    "channels",
 ]
+
+# ✅ ADD THIS (VERY IMPORTANT)
+ASGI_APPLICATION = "mybackend.asgi.application"
+
+# ✅ ADD THIS (FOR DEV – no Redis needed)
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+    }
+}
 
 
 # ---------------- MIDDLEWARE ----------------
