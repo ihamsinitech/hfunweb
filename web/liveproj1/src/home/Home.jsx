@@ -35,21 +35,27 @@ import {
   MdOutlineExplore,
   MdSlowMotionVideo,
   MdAddCircleOutline,
-  MdClose
+  MdClose,
+  MdGridOn,
+  MdPlayCircleOutline,
+  MdAccountBox
 } from "react-icons/md";
 import { RiUser3Line, RiUserFill } from "react-icons/ri";
 import { FiSend, FiSearch, FiMoreHorizontal } from "react-icons/fi";
-import { BiMoviePlay } from "react-icons/bi";
+import { BiMoviePlay, BiUserPlus } from "react-icons/bi";
+import { IoIosSettings } from "react-icons/io";
 
 const API = "http://127.0.0.1:8000/api";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("home");
   const [currentUser, setCurrentUser] = useState({
-    username: "",
-    fullName: "",
+    username: "instagram",
+    fullName: "Instagram",
     profilePic: "",
-    isVerified: false
+    isVerified: true,
+    bio: "Bringing you closer to the people and things you love. 💬",
+    website: "help.instagram.com"
   });
 
   // Data states
@@ -58,6 +64,11 @@ export default function Home() {
   const [reels, setReels] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
   const [messages, setMessages] = useState([]);
+  const [userStats, setUserStats] = useState({
+    posts: 6623,
+    followers: "383M",
+    following: 48
+  });
   
   // UI states
   const [activeStory, setActiveStory] = useState(null);
@@ -67,10 +78,13 @@ export default function Home() {
   const [commentText, setCommentText] = useState("");
   const [activeCommentPost, setActiveCommentPost] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [profileTab, setProfileTab] = useState("posts");
+  const [showMoreOptions, setShowMoreOptions] = useState(false);
   
   const token = localStorage.getItem("token");
   const postInputRef = useRef(null);
   const storyInputRef = useRef(null);
+  const searchRef = useRef(null);
 
   /* ================= FETCH DATA FROM BACKEND ================= */
   useEffect(() => {
@@ -93,12 +107,15 @@ export default function Home() {
       });
       if (response.ok) {
         const data = await response.json();
-        setCurrentUser({
+        setCurrentUser(prev => ({
+          ...prev,
           username: data.username || "user",
           fullName: data.full_name || data.username || "User",
           profilePic: data.profile_pic || "",
-          isVerified: data.is_verified || false
-        });
+          isVerified: data.is_verified || false,
+          bio: data.bio || prev.bio,
+          website: data.website || prev.website
+        }));
       }
     } catch (error) {
       console.error("Error fetching user data:", error);
@@ -172,7 +189,6 @@ export default function Home() {
 
   const fetchSuggestions = async () => {
     try {
-      // If your backend has a suggestions endpoint
       const response = await fetch(`${API}/suggestions/`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -188,24 +204,32 @@ export default function Home() {
           {
             id: 1,
             username: "chambigoth",
+            name: "Cham Bigoth",
+            profilePic: "",
             description: "Followed by rabbit__saman",
             isFollowed: false
           },
           {
             id: 2,
             username: "McEight",
+            name: "Mc Eight",
+            profilePic: "",
             description: "Suggested for you",
             isFollowed: false
           },
           {
             id: 3,
             username: "Vyahnavi_Hanha",
+            name: "Vyahnavi",
+            profilePic: "",
             description: "Suggested for you",
             isFollowed: false
           },
           {
             id: 4,
             username: "partyArchitects",
+            name: "Party Architects",
+            profilePic: "",
             description: "Followed by beautiful_mercy",
             isFollowed: false
           }
@@ -265,7 +289,6 @@ export default function Home() {
       });
 
       if (response.ok) {
-        // Update local state
         setPosts(posts.map(post => {
           if (post.id === postId) {
             const newLiked = !post.isLiked;
@@ -331,7 +354,6 @@ export default function Home() {
     setActiveStory(story);
     setStoryProgress(0);
     
-    // Mark story as seen
     if (!story.hasSeen) {
       fetch(`${API}/stories/${story.id}/view/`, {
         method: 'POST',
@@ -355,7 +377,6 @@ export default function Home() {
     const formData = new FormData();
     if (file.type.startsWith('video')) {
       formData.append('video', file);
-      // For reels
       formData.append('caption', 'New reel 🎥');
     } else {
       formData.append('image', file);
@@ -372,7 +393,6 @@ export default function Home() {
       });
 
       if (response.ok) {
-        // Refresh posts
         fetchPosts();
         if (file.type.startsWith('video')) {
           fetchReels();
@@ -427,7 +447,6 @@ export default function Home() {
       if (response.ok) {
         setCommentText("");
         setActiveCommentPost(null);
-        // Refresh posts to show new comment
         fetchPosts();
       }
     } catch (error) {
@@ -450,7 +469,6 @@ export default function Home() {
       
       if (response.ok) {
         const data = await response.json();
-        // Handle search results based on your API response structure
         console.log("Search results:", data);
       }
     } catch (error) {
@@ -460,7 +478,6 @@ export default function Home() {
 
   /* ================= COMPONENTS ================= */
 
-  // Story Item Component
   const StoryItem = ({ story, isUserStory = false }) => (
     <div className="story-item" onClick={() => !isUserStory && handleStoryClick(story)}>
       <div className={`story-ring ${story.hasSeen ? 'seen' : 'unseen'} ${isUserStory ? 'user-story' : ''}`}>
@@ -479,12 +496,15 @@ export default function Home() {
     </div>
   );
 
-  // Suggestion Item Component
   const SuggestionItem = ({ user }) => (
     <div className="suggestion-item">
       <div className="suggestion-user">
         <div className="suggestion-avatar">
-          <div className="avatar-initial">{user.username.charAt(0)}</div>
+          {user.profilePic ? (
+            <img src={user.profilePic} alt={user.username} />
+          ) : (
+            <div className="avatar-initial-small">{user.username.charAt(0)}</div>
+          )}
         </div>
         <div className="suggestion-info">
           <strong>{user.username}</strong>
@@ -500,10 +520,8 @@ export default function Home() {
     </div>
   );
 
-  // Post Component
   const Post = ({ post }) => (
     <div className="post-card">
-      {/* Post Header */}
       <div className="post-header">
         <div className="post-user">
           <div className="post-avatar">
@@ -516,7 +534,7 @@ export default function Home() {
           <div className="post-user-info">
             <div className="post-username">
               <strong>{post.user}</strong>
-              {post.user === "chambigoth" && <span className="verified-badge">✓</span>}
+              {post.user === "instagram" && <span className="verified-badge">✓</span>}
             </div>
             {post.location && <span className="post-location">{post.location}</span>}
           </div>
@@ -524,7 +542,6 @@ export default function Home() {
         <FiMoreHorizontal className="more-btn" />
       </div>
 
-      {/* Post Image/Video */}
       <div className="post-media-container">
         {post.image && (
           <img src={post.image} alt={post.caption} className="post-media" />
@@ -534,7 +551,6 @@ export default function Home() {
         )}
       </div>
 
-      {/* Post Actions */}
       <div className="post-actions">
         <div className="post-actions-left">
           <button onClick={() => handleLike(post.id)}>
@@ -552,7 +568,6 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Post Info */}
       <div className="post-info">
         <strong>{post.likes.toLocaleString()} likes</strong>
         <div className="post-caption">
@@ -564,7 +579,6 @@ export default function Home() {
         <div className="post-time">{post.time}</div>
       </div>
 
-      {/* Comment Input */}
       {activeCommentPost === post.id && (
         <div className="comment-input-container">
           <input
@@ -586,37 +600,10 @@ export default function Home() {
     </div>
   );
 
-  // Reel Component
-  const Reel = ({ reel }) => (
-    <div className="reel">
-      <div className="reel-video">
-        <video src={reel.video} autoPlay muted loop />
-      </div>
-      <div className="reel-overlay">
-        <div className="reel-user">
-          <div className="reel-avatar">
-            <div className="avatar-initial">{reel.user.charAt(0)}</div>
-          </div>
-          <strong>{reel.user}</strong>
-          <button className="follow-btn">Follow</button>
-        </div>
-        <div className="reel-caption">{reel.caption}</div>
-        <div className="reel-actions">
-          <button><AiOutlineHeart /></button>
-          <button><FaRegComment /></button>
-          <button><FiSend /></button>
-          <button><BsBookmark /></button>
-        </div>
-      </div>
-    </div>
-  );
-
   /* ================= MAIN VIEWS ================= */
 
-  // Home View
   const renderHome = () => (
     <div className="home-container">
-      {/* Main Feed */}
       <div className="main-feed">
         {/* Stories */}
         {stories.length > 0 && (
@@ -662,9 +649,8 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Sidebar */}
+      {/* Sidebar - Desktop only */}
       <div className="home-sidebar">
-        {/* Current User */}
         <div className="sidebar-user">
           <div className="user-avatar">
             {currentUser.profilePic ? (
@@ -680,7 +666,6 @@ export default function Home() {
           <button className="switch-btn">Switch</button>
         </div>
 
-        {/* Suggestions */}
         {suggestions.length > 0 && (
           <div className="suggestions-section">
             <div className="suggestions-header">
@@ -695,7 +680,6 @@ export default function Home() {
           </div>
         )}
 
-        {/* Footer Links */}
         <div className="sidebar-footer">
           <div className="footer-links">
             <a href="#">About</a> • <a href="#">Help</a> • <a href="#">Press</a> • <a href="#">API</a> • <a href="#">Jobs</a> • 
@@ -709,7 +693,6 @@ export default function Home() {
     </div>
   );
 
-  // Search View
   const renderSearch = () => (
     <div className="search-page">
       <div className="search-container">
@@ -725,14 +708,12 @@ export default function Home() {
         {searchQuery && (
           <div className="search-results">
             <p>Search results for: {searchQuery}</p>
-            {/* Search results would go here */}
           </div>
         )}
       </div>
     </div>
   );
 
-  // Messages View
   const renderMessages = () => (
     <div className="messages-page">
       <div className="messages-container">
@@ -740,7 +721,6 @@ export default function Home() {
           <div className="messages-header">
             <h2>{currentUser.username}</h2>
             <div className="messages-actions">
-              <AiOutlinePlusSquare />
               <MdSlowMotionVideo />
             </div>
           </div>
@@ -769,17 +749,6 @@ export default function Home() {
           </div>
         </div>
         <div className="chat-area">
-          <div className="chat-header">
-            <div className="chat-user">
-              <div className="chat-avatar">
-                <div className="avatar-initial">U</div>
-              </div>
-              <div className="chat-user-info">
-                <strong>Select a conversation</strong>
-                <span>Start a new message</span>
-              </div>
-            </div>
-          </div>
           <div className="chat-welcome">
             <h3>Your Messages</h3>
             <p>Send private messages to friends</p>
@@ -789,13 +758,30 @@ export default function Home() {
     </div>
   );
 
-  // Reels View
   const renderReels = () => (
     <div className="reels-page">
       <div className="reels-container">
         {reels.length > 0 ? (
           reels.map(reel => (
-            <Reel key={reel.id} reel={reel} />
+            <div key={reel.id} className="reel">
+              <video src={reel.video} autoPlay muted loop />
+              <div className="reel-overlay">
+                <div className="reel-user">
+                  <div className="reel-avatar">
+                    <div className="avatar-initial">{reel.user.charAt(0)}</div>
+                  </div>
+                  <strong>{reel.user}</strong>
+                  <button className="follow-btn">Follow</button>
+                </div>
+                <div className="reel-caption">{reel.caption}</div>
+                <div className="reel-actions">
+                  <button><AiOutlineHeart /></button>
+                  <button><FaRegComment /></button>
+                  <button><FiSend /></button>
+                  <button><BsBookmark /></button>
+                </div>
+              </div>
+            </div>
           ))
         ) : (
           <div className="no-reels">
@@ -806,53 +792,124 @@ export default function Home() {
     </div>
   );
 
-  // Profile View
   const renderProfile = () => (
     <div className="profile-page">
+      {/* Profile Header */}
       <div className="profile-header">
-        <div className="profile-avatar">
-          {currentUser.profilePic ? (
-            <img src={currentUser.profilePic} alt={currentUser.username} />
-          ) : (
-            <div className="avatar-initial-large">{currentUser.username.charAt(0)}</div>
-          )}
-        </div>
-        <div className="profile-info">
-          <div className="profile-username">
-            <h2>{currentUser.username}</h2>
-            {currentUser.isVerified && <span className="verified-badge">✓</span>}
-            <button className="edit-profile">Edit Profile</button>
+        <div className="profile-avatar-section">
+          <div className="profile-avatar">
+            {currentUser.profilePic ? (
+              <img src={currentUser.profilePic} alt={currentUser.username} />
+            ) : (
+              <div className="avatar-initial-large">{currentUser.username.charAt(0)}</div>
+            )}
           </div>
+        </div>
+        
+        <div className="profile-info-section">
+          <div className="profile-top-row">
+            <h1 className="profile-username">{currentUser.username}</h1>
+            {currentUser.isVerified && <span className="verified-badge large">✓</span>}
+            <div className="profile-actions">
+              <button className="edit-profile">Edit Profile</button>
+              <button className="view-archive">View Archive</button>
+              <IoIosSettings className="settings-icon" />
+            </div>
+          </div>
+          
           <div className="profile-stats">
             <div className="stat">
-              <strong>{posts.length}</strong>
+              <strong>{userStats.posts.toLocaleString()}</strong>
               <span>posts</span>
             </div>
             <div className="stat">
-              <strong>0</strong>
+              <strong>{userStats.followers}</strong>
               <span>followers</span>
             </div>
             <div className="stat">
-              <strong>0</strong>
+              <strong>{userStats.following}</strong>
               <span>following</span>
             </div>
           </div>
+          
           <div className="profile-bio">
-            <p>{currentUser.fullName}</p>
+            <h2>{currentUser.fullName}</h2>
+            <p>{currentUser.bio}</p>
+            <a href={`https://${currentUser.website}`} className="profile-website">{currentUser.website}</a>
           </div>
         </div>
       </div>
-      <div className="profile-posts">
-        <h3>Posts</h3>
-        {posts.length > 0 ? (
-          <div className="posts-grid">
-            {posts.map(post => (
-              <div key={post.id} className="profile-post">
-                {post.image && <img src={post.image} alt="" />}
-                {post.video && <video src={post.video} />}
-              </div>
-            ))}
+
+      {/* Profile Highlights */}
+      <div className="profile-highlights">
+        <div className="highlight-item">
+          <div className="highlight-circle">
+            <span>#</span>
           </div>
+          <span className="highlight-name">ShareWith...</span>
+        </div>
+        <div className="highlight-item">
+          <div className="highlight-circle">
+            <span>💬</span>
+          </div>
+          <span className="highlight-name">Made Us</span>
+        </div>
+        <div className="highlight-item">
+          <div className="highlight-circle">
+            <span>SBS</span>
+          </div>
+          <span className="highlight-name">SBS</span>
+        </div>
+        <div className="highlight-item">
+          <div className="highlight-circle">
+            <span>💎</span>
+          </div>
+          <span className="highlight-name">Hidden Gems</span>
+        </div>
+        <div className="highlight-item">
+          <div className="highlight-circle">
+            <span>#</span>
+          </div>
+          <span className="highlight-name">Advocates</span>
+        </div>
+      </div>
+
+      {/* Profile Tabs */}
+      <div className="profile-tabs">
+        <button 
+          className={`profile-tab ${profileTab === 'posts' ? 'active' : ''}`}
+          onClick={() => setProfileTab('posts')}
+        >
+          <MdGridOn /> <span>POSTS</span>
+        </button>
+        <button 
+          className={`profile-tab ${profileTab === 'reels' ? 'active' : ''}`}
+          onClick={() => setProfileTab('reels')}
+        >
+          <MdPlayCircleOutline /> <span>REELS</span>
+        </button>
+        <button 
+          className={`profile-tab ${profileTab === 'tagged' ? 'active' : ''}`}
+          onClick={() => setProfileTab('tagged')}
+        >
+          <MdAccountBox /> <span>TAGGED</span>
+        </button>
+      </div>
+
+      {/* Posts Grid */}
+      <div className="profile-posts-grid">
+        {posts.length > 0 ? (
+          posts.slice(0, 9).map(post => (
+            <div key={post.id} className="profile-post-item">
+              {post.image && <img src={post.image} alt="" />}
+              {post.video && (
+                <div className="video-overlay">
+                  <video src={post.video} />
+                  <div className="video-icon">▶</div>
+                </div>
+              )}
+            </div>
+          ))
         ) : (
           <div className="no-posts-profile">
             <p>No posts yet</p>
@@ -862,90 +919,74 @@ export default function Home() {
     </div>
   );
 
-  // Story Viewer
-  const renderStoryViewer = () => {
-    if (!activeStory) return null;
+  // Bottom Navigation for Mobile
+  const MobileBottomNav = () => (
+    <div className="mobile-bottom-nav">
+      <button 
+        className={`mobile-nav-icon ${activeTab === "home" ? "active" : ""}`}
+        onClick={() => setActiveTab("home")}
+      >
+        {activeTab === "home" ? <AiFillHome /> : <AiOutlineHome />}
+      </button>
+      <button 
+        className={`mobile-nav-icon ${activeTab === "search" ? "active" : ""}`}
+        onClick={() => setActiveTab("search")}
+      >
+        <AiOutlineSearch />
+      </button>
+      <button 
+        className="mobile-nav-icon"
+        onClick={() => postInputRef.current?.click()}
+      >
+        <AiOutlinePlusSquare />
+      </button>
+      <button 
+        className={`mobile-nav-icon ${activeTab === "reels" ? "active" : ""}`}
+        onClick={() => setActiveTab("reels")}
+      >
+        <BiMoviePlay />
+      </button>
+      <button 
+        className={`mobile-nav-icon ${activeTab === "profile" ? "active" : ""}`}
+        onClick={() => setActiveTab("profile")}
+      >
+        {activeTab === "profile" ? <RiUserFill /> : <RiUser3Line />}
+      </button>
+    </div>
+  );
 
-    return (
-      <div className="story-overlay">
-        <div className="story-viewer">
-          <div className="story-progress">
-            <div 
-              className="progress-bar"
-              style={{ width: `${storyProgress}%` }}
-            ></div>
-          </div>
-          <div className="story-header">
-            <div className="story-user-info">
-              <div className="story-avatar">
-                {activeStory.user_profile_pic ? (
-                  <img src={activeStory.user_profile_pic} alt={activeStory.user} />
-                ) : (
-                  <div className="avatar-initial">{activeStory.user.charAt(0)}</div>
-                )}
-              </div>
-              <span className="story-username">{activeStory.user}</span>
-              <span className="story-time">{activeStory.created_at}</span>
-            </div>
-            <MdClose className="close-btn" onClick={closeStory} />
-          </div>
-          <div className="story-content">
-            <img src={activeStory.image || "https://images.unsplash.com/photo-1506744038136-46273834b3fb"} alt="" />
-          </div>
-          <div className="story-footer">
-            <input type="text" placeholder="Send message" />
-            <button><AiOutlineHeart /></button>
-            <button><AiOutlineSend /></button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  /* ================= MAIN RENDER ================= */
   return (
     <div className="hfun-app">
       {/* Top Navigation */}
       <nav className="top-nav">
         <div className="nav-container">
-          {/* Logo */}
           <div className="nav-logo" onClick={() => setActiveTab("home")}>
             <div className="logo-icon">
-              {/* You can use a custom Hfun icon or keep Instagram style */}
               <div className="hfun-logo">Hfun</div>
             </div>
           </div>
 
-          {/* Search */}
-          <div className="nav-search">
+          {/* Desktop Search */}
+          <div className="nav-search-desktop">
             <AiOutlineSearch />
             <input
               placeholder="Search"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onFocus={() => setShowSearch(true)}
-              onBlur={() => setTimeout(() => setShowSearch(false), 200)}
+              onChange={(e) => handleSearch(e.target.value)}
+              ref={searchRef}
             />
-            {showSearch && searchQuery && (
-              <div className="search-dropdown">
-                <div className="search-dropdown-item">
-                  <span>Search for "{searchQuery}"</span>
-                </div>
-              </div>
-            )}
           </div>
 
-          {/* Navigation Icons */}
           <div className="nav-icons">
             <button 
-              className={`nav-icon ${activeTab === "home" ? "active" : ""}`}
+              className={`nav-icon desktop-only ${activeTab === "home" ? "active" : ""}`}
               onClick={() => setActiveTab("home")}
             >
               {activeTab === "home" ? <AiFillHome /> : <AiOutlineHome />}
             </button>
             
             <button 
-              className={`nav-icon ${activeTab === "messages" ? "active" : ""}`}
+              className={`nav-icon desktop-only ${activeTab === "messages" ? "active" : ""}`}
               onClick={() => {
                 setActiveTab("messages");
                 fetchMessages();
@@ -955,15 +996,14 @@ export default function Home() {
             </button>
             
             <button 
-              className="nav-icon"
+              className="nav-icon desktop-only"
               onClick={() => postInputRef.current?.click()}
-              title="Create Post"
             >
               <AiOutlinePlusSquare />
             </button>
             
             <button 
-              className={`nav-icon ${activeTab === "reels" ? "active" : ""}`}
+              className={`nav-icon desktop-only ${activeTab === "reels" ? "active" : ""}`}
               onClick={() => setActiveTab("reels")}
             >
               <BiMoviePlay />
@@ -971,23 +1011,24 @@ export default function Home() {
             
             <button 
               className={`nav-icon ${activeTab === "search" ? "active" : ""}`}
-              onClick={() => setActiveTab("search")}
+              onClick={() => {
+                setActiveTab("search");
+                searchRef.current?.focus();
+              }}
             >
               <AiOutlineSearch />
             </button>
             
             <button 
-              className={`nav-icon ${activeTab === "profile" ? "active" : ""}`}
+              className={`nav-icon desktop-only ${activeTab === "profile" ? "active" : ""}`}
               onClick={() => setActiveTab("profile")}
-              title="Profile"
             >
               <RiUser3Line />
             </button>
             
             <button 
-              className="nav-icon logout-btn"
+              className="nav-icon logout-btn desktop-only"
               onClick={handleLogout}
-              title="Logout"
             >
               <span>Logout</span>
             </button>
@@ -1004,6 +1045,9 @@ export default function Home() {
         {activeTab === "profile" && renderProfile()}
       </main>
 
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav />
+
       {/* Hidden Inputs */}
       <input 
         hidden 
@@ -1019,9 +1063,6 @@ export default function Home() {
         accept="image/*" 
         onChange={uploadStory} 
       />
-
-      {/* Story Viewer */}
-      {renderStoryViewer()}
     </div>
   );
 }
