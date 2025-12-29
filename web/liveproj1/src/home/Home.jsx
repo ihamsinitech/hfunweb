@@ -1,1593 +1,1027 @@
-// import React, { useState, useEffect, useRef } from "react";
-// import "./Home.css";
-// import Profile from "./profiles";
-
-// import { FiUpload, FiSearch } from "react-icons/fi";
-// import {
-//   AiFillHome,
-//   AiOutlineHeart,
-//   AiFillHeart,
-//   AiOutlineComment,
-//   AiOutlineShareAlt,
-//   AiOutlineEye,
-// } from "react-icons/ai";
-// import { RiUser3Line } from "react-icons/ri";
-// import { MdSlowMotionVideo } from "react-icons/md";
-// import { BsMessenger } from "react-icons/bs";
-
-// const API = "http://127.0.0.1:8000/api";
-
-// export default function Home() {
-//   const [activeTab, setActiveTab] = useState("home");
-
-//   const [posts, setPosts] = useState([]);
-//   const [stories, setStories] = useState([]);
-//   const [reels, setReels] = useState([]);
-
-//   const storyInputRef = useRef(null);
-//   const [activeStory, setActiveStory] = useState(null);
-
-//   const [activeCommentPost, setActiveCommentPost] = useState(null);
-//   const [commentText, setCommentText] = useState("");
-
-//   /* ================= USER ================= */
-//   const [myUsername, setMyUsername] = useState("");
-
-//   /* ================= SEARCH ================= */
-//   const [searchQuery, setSearchQuery] = useState("");
-//   const [searchUsers, setSearchUsers] = useState([]);
-//   const [searchPosts, setSearchPosts] = useState([]);
-
-//   /* ================= MESSAGES ================= */
-//   const socketRef = useRef(null);
-//   const [messages, setMessages] = useState([]);
-//   const [messageText, setMessageText] = useState("");
-//   const [receiver, setReceiver] = useState("");
-
-//   const token = localStorage.getItem("token");
-
-//   /* ================= LOGOUT (ADDED) ================= */
-//   const handleLogout = () => {
-//     localStorage.removeItem("token");
-//     window.location.href = "/";
-//   };
-
-//   /* ================= FETCH ================= */
-
-//   const fetchPosts = async () => {
-//     const res = await fetch(`${API}/posts/`);
-//     const data = await res.json();
-//     setPosts(data);
-//   };
-
-//   const fetchStories = async () => {
-//     const res = await fetch(`${API}/stories/`);
-//     const data = await res.json();
-//     setStories(data);
-//   };
-
-//   const fetchReels = async () => {
-//     const res = await fetch(`${API}/reels/`);
-//     const data = await res.json();
-//     setReels(data);
-//   };
-
-//   const fetchMessages = async () => {
-//     const res = await fetch(`${API}/messages/`, {
-//       headers: { Authorization: `Bearer ${token}` },
-//     });
-//     const data = await res.json();
-//     setMessages(data);
-//   };
-
-//   const fetchMyProfile = async () => {
-//     const res = await fetch(`${API}/profile/`, {
-//       headers: { Authorization: `Bearer ${token}` },
-//     });
-//     const data = await res.json();
-//     setMyUsername(data.username);
-//   };
-
-//   useEffect(() => {
-//     fetchPosts();
-//     fetchStories();
-//     fetchReels();
-//     fetchMyProfile();
-//   }, []);
-
-//   /* ================= SEARCH ================= */
-
-//   const handleSearch = async (value) => {
-//     setSearchQuery(value);
-
-//     if (!value.trim()) {
-//       setSearchUsers([]);
-//       setSearchPosts([]);
-//       return;
-//     }
-
-//     const res = await fetch(`${API}/search/?q=${value}`);
-//     const data = await res.json();
-
-//     setSearchUsers(data.users || []);
-//     setSearchPosts(data.posts || []);
-//   };
-
-//   /* ================= WEBSOCKET ================= */
-
-//   useEffect(() => {
-//     if (activeTab !== "messages") return;
-
-//     fetchMessages();
-//     socketRef.current = new WebSocket("ws://127.0.0.1:8000/ws/chat/");
-
-//     socketRef.current.onmessage = (e) => {
-//       const data = JSON.parse(e.data);
-//       setMessages((prev) => [...prev, data]);
-//     };
-
-//     return () => socketRef.current?.close();
-//   }, [activeTab]);
-
-//   const sendMessage = () => {
-//     if (!messageText || !receiver) return;
-
-//     socketRef.current.send(
-//       JSON.stringify({ receiver, text: messageText })
-//     );
-//     setMessageText("");
-//   };
-
-//   /* ================= UPLOAD POST ================= */
-
-//   const handleUpload = async (e) => {
-//     const file = e.target.files[0];
-//     if (!file) return;
-
-//     const formData = new FormData();
-//     formData.append(
-//       file.type.startsWith("video") ? "video" : "image",
-//       file
-//     );
-//     formData.append("caption", "New post ✨");
-
-//     await fetch(`${API}/posts/create/`, {
-//       method: "POST",
-//       headers: { Authorization: `Bearer ${token}` },
-//       body: formData,
-//     });
-
-//     fetchPosts();
-//     fetchReels();
-//   };
-
-//   /* ================= STORY UPLOAD ================= */
-
-//   const uploadStory = async (e) => {
-//     const file = e.target.files[0];
-//     if (!file) return;
-
-//     const formData = new FormData();
-//     formData.append("image", file);
-
-//     await fetch(`${API}/stories/upload/`, {
-//       method: "POST",
-//       headers: { Authorization: `Bearer ${token}` },
-//       body: formData,
-//     });
-
-//     fetchStories();
-//   };
-
-//   /* ================= LIKE ================= */
-
-//   const handleLike = async (id) => {
-//     await fetch(`${API}/posts/${id}/like/`, {
-//       method: "POST",
-//       headers: { Authorization: `Bearer ${token}` },
-//     });
-//     fetchPosts();
-//   };
-
-//   /* ================= COMMENT ================= */
-
-//   const submitComment = async (id) => {
-//     if (!commentText) return;
-
-//     await fetch(`${API}/posts/${id}/comment/`, {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${token}`,
-//       },
-//       body: JSON.stringify({ text: commentText }),
-//     });
-
-//     setCommentText("");
-//     setActiveCommentPost(null);
-//     fetchPosts();
-//   };
-
-//   /* ================= STORIES ================= */
-
-//   const renderStories = () => {
-//     const myStory = stories.find((s) => s.user === myUsername);
-//     const otherStories = stories.filter((s) => s.user !== myUsername);
-
-//     return (
-//       <div className="stories-page">
-//         <div
-//           className="story-item"
-//           onClick={() =>
-//             myStory
-//               ? setActiveStory(myStory)
-//               : storyInputRef.current.click()
-//           }
-//         >
-//           <div className="story-ring">
-//             {myStory ? (
-//               <img src={myStory.image} alt="" />
-//             ) : (
-//               <span style={{ fontSize: "30px", color: "#ff0066" }}>+</span>
-//             )}
-//           </div>
-//           <p>Your Story</p>
-
-//           {!myStory && (
-//             <input
-//               hidden
-//               ref={storyInputRef}
-//               type="file"
-//               accept="image/*"
-//               onChange={uploadStory}
-//             />
-//           )}
-//         </div>
-
-//         {otherStories.map((s) => (
-//           <div
-//             key={s.id}
-//             className="story-item"
-//             onClick={() => setActiveStory(s)}
-//           >
-//             <div className="story-ring">
-//               <img src={s.image} alt="" />
-//             </div>
-//             <p>{s.user}</p>
-//           </div>
-//         ))}
-
-//         {activeStory && (
-//           <div className="story-viewer">
-//             <span
-//               className="story-close"
-//               onClick={() => setActiveStory(null)}
-//             >
-//               ✕
-//             </span>
-//             <img src={activeStory.image} alt="" />
-//             <p>{activeStory.user}</p>
-//           </div>
-//         )}
-//       </div>
-//     );
-//   };
-
-//   /* ================= REELS ================= */
-
-//   const renderReels = () => {
-//     const videoPosts = posts.filter((p) => p.video);
-//     const allReels = [...reels, ...videoPosts];
-
-//     return (
-//       <div className="home-feed">
-//         {allReels.map((r) => (
-//           <div key={`reel-${r.id}`} className="insta-post">
-//             <div className="post-header">
-//               <strong>{r.user}</strong>
-//             </div>
-
-//             <video
-//               src={r.video}
-//               className="post-image"
-//               autoPlay
-//               muted
-//               loop
-//               playsInline
-//               preload="metadata"
-//             />
-
-//             <div className="post-actions">
-//               <AiOutlineHeart />
-//               <AiOutlineComment />
-//               <AiOutlineShareAlt />
-//             </div>
-
-//             <div className="post-info">
-//               <strong>{r.likes || 0} likes</strong>
-//             </div>
-
-//             {r.caption && (
-//               <p className="post-info">
-//                 <strong>{r.user}</strong> {r.caption}
-//               </p>
-//             )}
-//           </div>
-//         ))}
-//       </div>
-//     );
-//   };
-
-//   /* ================= HOME ================= */
-
-//   const renderHome = () => (
-//     <div className="home-feed">
-//       {posts.map((p) => (
-//         <div key={p.id} className="insta-post">
-//           <div className="post-header">
-//             <strong>{p.user}</strong>
-//           </div>
-
-//           {p.image && <img src={p.image} className="post-image" />}
-//           {p.video && (
-//             <video src={p.video} className="post-image" controls />
-//           )}
-
-//           <div className="post-actions">
-//             {p.liked ? (
-//               <AiFillHeart color="red" onClick={() => handleLike(p.id)} />
-//             ) : (
-//               <AiOutlineHeart onClick={() => handleLike(p.id)} />
-//             )}
-//             <AiOutlineComment
-//               onClick={() => setActiveCommentPost(p.id)}
-//             />
-//             <AiOutlineShareAlt />
-//           </div>
-
-//           <div className="post-info">
-//             <strong>{p.likes} likes</strong>
-//           </div>
-
-//           <p className="post-info">
-//             <strong>{p.user}</strong> {p.caption}
-//           </p>
-
-//           {activeCommentPost === p.id && (
-//             <div className="comment-box">
-//               <input
-//                 placeholder="Add a comment..."
-//                 value={commentText}
-//                 onChange={(e) => setCommentText(e.target.value)}
-//               />
-//               <button onClick={() => submitComment(p.id)}>
-//                 Post
-//               </button>
-//             </div>
-//           )}
-//         </div>
-//       ))}
-//     </div>
-//   );
-
-//   /* ================= SWITCH ================= */
-
-//   const renderContent = () => {
-//     switch (activeTab) {
-//       case "home":
-//         return renderHome();
-//       case "search":
-//         return (
-//           <div className="search-page">
-//             <input
-//               className="search-input"
-//               placeholder="Search users or posts..."
-//               value={searchQuery}
-//               onChange={(e) => handleSearch(e.target.value)}
-//             />
-//           </div>
-//         );
-//       case "stories":
-//         return renderStories();
-//       case "reels":
-//         return renderReels();
-//       case "messages":
-//         return <div />;
-//       case "upload":
-//         return <input type="file" onChange={handleUpload} />;
-//       case "profile":
-//         return <Profile />;
-//       default:
-//         return null;
-//     }
-//   };
-
-//   return (
-//     <div className="layout">
-//       <aside className="sidebar">
-//         <h1>Hfun</h1>
-
-//         <div onClick={() => setActiveTab("home")}>
-//           <AiFillHome /> Home
-//         </div>
-//         <div onClick={() => setActiveTab("search")}>
-//           <FiSearch /> Search
-//         </div>
-//         <div onClick={() => setActiveTab("messages")}>
-//           <BsMessenger /> Messages
-//         </div>
-//         <div onClick={() => setActiveTab("stories")}>
-//           <AiOutlineEye /> Stories
-//         </div>
-//         <div onClick={() => setActiveTab("reels")}>
-//           <MdSlowMotionVideo /> Reels
-//         </div>
-//         <div onClick={() => setActiveTab("upload")}>
-//           <FiUpload /> Upload
-//         </div>
-//         <div onClick={() => setActiveTab("profile")}>
-//           <RiUser3Line /> Profile
-//         </div>
-
-//         {/* ✅ LOGOUT ADDED */}
-//         <div onClick={handleLogout} className="logout-btn">
-//           Logout
-//         </div>
-
-//       </aside>
-
-//       <main className="content">
-//         <div className="top-bar">Hfun</div>
-//         {renderContent()}
-//       </main>
-//     </div>
-//   );
-// }
-
-
-
-
-
-
-// import React, { useState, useEffect, useRef } from "react";
-// import "./Home.css";
-// import Profile from "./profiles";
-
-// import { FiUpload, FiSearch } from "react-icons/fi";
-// import {
-//   AiFillHome,
-//   AiOutlineHeart,
-//   AiFillHeart,
-//   AiOutlineComment,
-//   AiOutlineShareAlt,
-//   AiOutlineEye,
-// } from "react-icons/ai";
-// import { RiUser3Line } from "react-icons/ri";
-// import { MdSlowMotionVideo } from "react-icons/md";
-// import { BsMessenger } from "react-icons/bs";
-
-// const API = "http://127.0.0.1:8000/api";
-
-// export default function Home() {
-//   const [activeTab, setActiveTab] = useState("home");
-
-//   /* ================= POSTS / STORIES / REELS ================= */
-//   const [posts, setPosts] = useState([]);
-//   const [stories, setStories] = useState([]);
-//   const [reels, setReels] = useState([]);
-
-//   /* ================= STORY ================= */
-//   const storyInputRef = useRef(null);
-//   const [activeStory, setActiveStory] = useState(null);
-
-//   /* ================= COMMENTS ================= */
-//   const [activeCommentPost, setActiveCommentPost] = useState(null);
-//   const [commentText, setCommentText] = useState("");
-
-//   /* ================= USER ================= */
-//   const [myUsername, setMyUsername] = useState("");
-
-//   /* ================= SEARCH ================= */
-//   const [searchQuery, setSearchQuery] = useState("");
-//   const [searchUsers, setSearchUsers] = useState([]);
-//   const [searchPosts, setSearchPosts] = useState([]);
-
-//   /* ================= MESSAGES ================= */
-//   const socketRef = useRef(null);
-//   const [messages, setMessages] = useState([]);
-//   const [messageText, setMessageText] = useState("");
-//   const [receiver, setReceiver] = useState("");
-
-//   const token = localStorage.getItem("token");
-
-//   /* ================= LOGOUT ================= */
-//   const handleLogout = () => {
-//     localStorage.removeItem("token");
-//     window.location.href = "/";
-//   };
-
-//   /* ================= FETCH ================= */
-
-//   const fetchPosts = async () => {
-//     const res = await fetch(`${API}/posts/`);
-//     const data = await res.json();
-//     setPosts(data);
-//   };
-
-//   const fetchStories = async () => {
-//     const res = await fetch(`${API}/stories/`);
-//     const data = await res.json();
-//     setStories(data);
-//   };
-
-//   const fetchReels = async () => {
-//     const res = await fetch(`${API}/reels/`);
-//     const data = await res.json();
-//     setReels(data);
-//   };
-
-//   const fetchMessages = async () => {
-//     const res = await fetch(`${API}/messages/`, {
-//       headers: { Authorization: `Bearer ${token}` },
-//     });
-//     const data = await res.json();
-//     setMessages(data);
-//   };
-
-//   const fetchMyProfile = async () => {
-//     const res = await fetch(`${API}/profile/`, {
-//       headers: { Authorization: `Bearer ${token}` },
-//     });
-//     const data = await res.json();
-//     setMyUsername(data.username);
-//   };
-
-//   useEffect(() => {
-//     fetchPosts();
-//     fetchStories();
-//     fetchReels();
-//     fetchMyProfile();
-//   }, []);
-
-//   /* ================= SEARCH ================= */
-
-//   const handleSearch = async (value) => {
-//     setSearchQuery(value);
-
-//     if (!value.trim()) {
-//       setSearchUsers([]);
-//       setSearchPosts([]);
-//       return;
-//     }
-
-//     const res = await fetch(`${API}/search/?q=${value}`);
-//     const data = await res.json();
-
-//     setSearchUsers(data.users || []);
-//     setSearchPosts(data.posts || []);
-//   };
-
-//   /* ================= WEBSOCKET (FIXED) ================= */
-
-//   useEffect(() => {
-//     if (activeTab !== "messages") return;
-
-//     fetchMessages();
-
-//     socketRef.current = new WebSocket("ws://127.0.0.1:8000/ws/chat/");
-
-//     socketRef.current.onmessage = (e) => {
-//       const data = JSON.parse(e.data);
-//       setMessages((prev) => [...prev, data]);
-//     };
-
-//     socketRef.current.onerror = (e) => {
-//       console.error("WebSocket error", e);
-//     };
-
-//     return () => socketRef.current?.close();
-//   }, [activeTab]);
-
-//   const sendMessage = () => {
-//     if (!messageText.trim() || !receiver.trim()) return;
-//     if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) {
-//       alert("Socket not connected");
-//       return;
-//     }
-
-//     const payload = {
-//       sender: myUsername,
-//       receiver: receiver,
-//       text: messageText,
-//     };
-
-//     socketRef.current.send(JSON.stringify(payload));
-
-//     // ✅ show message instantly
-//     setMessages((prev) => [...prev, payload]);
-//     setMessageText("");
-//   };
-
-//   /* ================= UPLOAD POST ================= */
-
-//   const handleUpload = async (e) => {
-//     const file = e.target.files[0];
-//     if (!file) return;
-
-//     const formData = new FormData();
-//     formData.append(
-//       file.type.startsWith("video") ? "video" : "image",
-//       file
-//     );
-//     formData.append("caption", "New post ✨");
-
-//     await fetch(`${API}/posts/create/`, {
-//       method: "POST",
-//       headers: { Authorization: `Bearer ${token}` },
-//       body: formData,
-//     });
-
-//     fetchPosts();
-//     fetchReels();
-//   };
-
-//   /* ================= STORY UPLOAD ================= */
-
-//   const uploadStory = async (e) => {
-//     const file = e.target.files[0];
-//     if (!file) return;
-
-//     const formData = new FormData();
-//     formData.append("image", file);
-
-//     await fetch(`${API}/stories/upload/`, {
-//       method: "POST",
-//       headers: { Authorization: `Bearer ${token}` },
-//       body: formData,
-//     });
-
-//     fetchStories();
-//   };
-
-//   /* ================= LIKE ================= */
-
-//   const handleLike = async (id) => {
-//     await fetch(`${API}/posts/${id}/like/`, {
-//       method: "POST",
-//       headers: { Authorization: `Bearer ${token}` },
-//     });
-//     fetchPosts();
-//   };
-
-//   /* ================= COMMENT ================= */
-
-//   const submitComment = async (id) => {
-//     if (!commentText) return;
-
-//     await fetch(`${API}/posts/${id}/comment/`, {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//         Authorization: `Bearer ${token}`,
-//       },
-//       body: JSON.stringify({ text: commentText }),
-//     });
-
-//     setCommentText("");
-//     setActiveCommentPost(null);
-//     fetchPosts();
-//   };
-
-//   /* ================= STORIES ================= */
-
-//   const renderStories = () => {
-//     const myStory = stories.find((s) => s.user === myUsername);
-//     const otherStories = stories.filter((s) => s.user !== myUsername);
-
-//     return (
-//       <div className="stories-page">
-//         <div
-//           className="story-item"
-//           onClick={() =>
-//             myStory
-//               ? setActiveStory(myStory)
-//               : storyInputRef.current.click()
-//           }
-//         >
-//           <div className="story-ring">
-//             {myStory ? (
-//               <img src={myStory.image} alt="" />
-//             ) : (
-//               <span style={{ fontSize: "30px", color: "#ff0066" }}>+</span>
-//             )}
-//           </div>
-//           <p>Your Story</p>
-
-//           {!myStory && (
-//             <input
-//               hidden
-//               ref={storyInputRef}
-//               type="file"
-//               accept="image/*"
-//               onChange={uploadStory}
-//             />
-//           )}
-//         </div>
-
-//         {otherStories.map((s) => (
-//           <div
-//             key={s.id}
-//             className="story-item"
-//             onClick={() => setActiveStory(s)}
-//           >
-//             <div className="story-ring">
-//               <img src={s.image} alt="" />
-//             </div>
-//             <p>{s.user}</p>
-//           </div>
-//         ))}
-
-//         {activeStory && (
-//           <div className="story-viewer">
-//             <span
-//               className="story-close"
-//               onClick={() => setActiveStory(null)}
-//             >
-//               ✕
-//             </span>
-//             <img src={activeStory.image} alt="" />
-//             <p>{activeStory.user}</p>
-//           </div>
-//         )}
-//       </div>
-//     );
-//   };
-
-//   /* ================= REELS ================= */
-
-//   const renderReels = () => {
-//     const videoPosts = posts.filter((p) => p.video);
-//     const allReels = [...reels, ...videoPosts];
-
-//     return (
-//       <div className="home-feed">
-//         {allReels.map((r) => (
-//           <div key={r.id} className="insta-post">
-//             <div className="post-header">
-//               <strong>{r.user}</strong>
-//             </div>
-
-//             <video
-//               src={r.video}
-//               className="post-image"
-//               autoPlay
-//               muted
-//               loop
-//             />
-
-//             <div className="post-actions">
-//               <AiOutlineHeart />
-//               <AiOutlineComment />
-//               <AiOutlineShareAlt />
-//             </div>
-
-//             <div className="post-info">
-//               <strong>{r.likes || 0} likes</strong>
-//             </div>
-//           </div>
-//         ))}
-//       </div>
-//     );
-//   };
-
-//   /* ================= HOME ================= */
-
-//   const renderHome = () => (
-//     <div className="home-feed">
-//       {posts.map((p) => (
-//         <div key={p.id} className="insta-post">
-//           <div className="post-header">
-//             <strong>{p.user}</strong>
-//           </div>
-
-//           {p.image && <img src={p.image} className="post-image" />}
-//           {p.video && <video src={p.video} className="post-image" controls />}
-
-//           <div className="post-actions">
-//             {p.liked ? (
-//               <AiFillHeart color="red" onClick={() => handleLike(p.id)} />
-//             ) : (
-//               <AiOutlineHeart onClick={() => handleLike(p.id)} />
-//             )}
-//             <AiOutlineComment
-//               onClick={() => setActiveCommentPost(p.id)}
-//             />
-//             <AiOutlineShareAlt />
-//           </div>
-
-//           <div className="post-info">
-//             <strong>{p.likes} likes</strong>
-//           </div>
-
-//           <p className="post-info">
-//             <strong>{p.user}</strong> {p.caption}
-//           </p>
-
-//           {activeCommentPost === p.id && (
-//             <div className="comment-box">
-//               <input
-//                 placeholder="Add a comment..."
-//                 value={commentText}
-//                 onChange={(e) => setCommentText(e.target.value)}
-//               />
-//               <button onClick={() => submitComment(p.id)}>Post</button>
-//             </div>
-//           )}
-//         </div>
-//       ))}
-//     </div>
-//   );
-
-//   /* ================= MESSAGES UI ================= */
-
-//   const renderMessages = () => (
-//     <div className="messages-page">
-//       <h2>Messages</h2>
-
-//       <div className="messages-list">
-//         {messages.map((m, i) => (
-//           <div key={i} className="message-item">
-//             <strong>{m.sender}:</strong> {m.text}
-//           </div>
-//         ))}
-//       </div>
-
-//       <div className="message-input">
-//         <input
-//           placeholder="Receiver username"
-//           value={receiver}
-//           onChange={(e) => setReceiver(e.target.value)}
-//         />
-//         <input
-//           placeholder="Type a message..."
-//           value={messageText}
-//           onChange={(e) => setMessageText(e.target.value)}
-//         />
-//         <button onClick={sendMessage}>Send</button>
-//       </div>
-//     </div>
-//   );
-
-//   /* ================= SWITCH ================= */
-
-//   const renderContent = () => {
-//     switch (activeTab) {
-//       case "home":
-//         return renderHome();
-//       case "search":
-//         return (
-//           <div className="search-page">
-//             <input
-//               className="search-input"
-//               placeholder="Search users or posts..."
-//               value={searchQuery}
-//               onChange={(e) => handleSearch(e.target.value)}
-//             />
-//           </div>
-//         );
-//       case "stories":
-//         return renderStories();
-//       case "reels":
-//         return renderReels();
-//       case "messages":
-//         return renderMessages();
-//       case "upload":
-//         return <input type="file" onChange={handleUpload} />;
-//       case "profile":
-//         return <Profile />;
-//       default:
-//         return null;
-//     }
-//   };
-
-//   return (
-//     <div className="layout">
-//       <aside className="sidebar">
-//         <h1>Hfun</h1>
-
-//         <div onClick={() => setActiveTab("home")}>
-//           <AiFillHome /> Home
-//         </div>
-//         <div onClick={() => setActiveTab("search")}>
-//           <FiSearch /> Search
-//         </div>
-//         <div onClick={() => setActiveTab("messages")}>
-//           <BsMessenger /> Messages
-//         </div>
-//         <div onClick={() => setActiveTab("stories")}>
-//           <AiOutlineEye /> Stories
-//         </div>
-//         <div onClick={() => setActiveTab("reels")}>
-//           <MdSlowMotionVideo /> Reels
-//         </div>
-//         <div onClick={() => setActiveTab("upload")}>
-//           <FiUpload /> Upload
-//         </div>
-//         <div onClick={() => setActiveTab("profile")}>
-//           <RiUser3Line /> Profile
-//         </div>
-
-//         <div onClick={handleLogout} className="logout-btn">
-//           Logout
-//         </div>
-//       </aside>
-
-//       <main className="content">
-//         <div className="top-bar">Hfun</div>
-//         {renderContent()}
-//       </main>
-//     </div>
-//   );
-// }
-
-
 import React, { useState, useEffect, useRef } from "react";
 import "./Home.css";
-import Profile from "./profiles";
 
-import { FiUpload, FiSearch } from "react-icons/fi";
+// Icons
 import {
   AiFillHome,
+  AiOutlineHome,
   AiOutlineHeart,
   AiFillHeart,
-  AiOutlineComment,
-  AiOutlineShareAlt,
-  AiOutlineEye,
-  AiOutlineSend,
+  AiOutlineMessage,
+  AiFillMessage,
+  AiOutlineCompass,
+  AiFillCompass,
+  AiOutlinePlusSquare,
+  AiOutlineVideoCamera,
+  AiOutlineSearch,
+  AiOutlineSend
 } from "react-icons/ai";
-import { RiUser3Line } from "react-icons/ri";
-import { MdSlowMotionVideo, MdClose } from "react-icons/md";
-import { BsMessenger, BsChevronLeft, BsChevronRight } from "react-icons/bs";
+import { 
+  BsInstagram, 
+  BsMessenger, 
+  BsBookmark, 
+  BsBookmarkFill,
+  BsThreeDots,
+  BsChevronLeft,
+  BsChevronRight
+} from "react-icons/bs";
+import { 
+  FaRegComment, 
+  FaRegHeart, 
+  FaHeart,
+  FaFacebookMessenger
+} from "react-icons/fa";
+import { 
+  MdOutlineExplore,
+  MdSlowMotionVideo,
+  MdAddCircleOutline,
+  MdClose
+} from "react-icons/md";
+import { RiUser3Line, RiUserFill } from "react-icons/ri";
+import { FiSend, FiSearch, FiMoreHorizontal } from "react-icons/fi";
+import { BiMoviePlay } from "react-icons/bi";
 
 const API = "http://127.0.0.1:8000/api";
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("home");
+  const [currentUser, setCurrentUser] = useState({
+    username: "",
+    fullName: "",
+    profilePic: "",
+    isVerified: false
+  });
 
-  /* ================= POSTS / STORIES / REELS ================= */
+  // Data states
   const [posts, setPosts] = useState([]);
   const [stories, setStories] = useState([]);
   const [reels, setReels] = useState([]);
-
-  /* ================= STORY ================= */
-  const storyInputRef = useRef(null);
-  const [activeStory, setActiveStory] = useState(null);
-  const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
-  const [storyProgress, setStoryProgress] = useState(0);
-  const [seenStories, setSeenStories] = useState(new Set());
-
-  /* ================= COMMENTS ================= */
-  const [activeCommentPost, setActiveCommentPost] = useState(null);
-  const [commentText, setCommentText] = useState("");
-
-  /* ================= USER ================= */
-  const [myUsername, setMyUsername] = useState("");
-
-  /* ================= SEARCH ================= */
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searchUsers, setSearchUsers] = useState([]);
-  const [searchPosts, setSearchPosts] = useState([]);
-
-  /* ================= MESSAGES ================= */
-  const socketRef = useRef(null);
+  const [suggestions, setSuggestions] = useState([]);
   const [messages, setMessages] = useState([]);
-  const [messageText, setMessageText] = useState("");
-  const [receiver, setReceiver] = useState("");
-
+  
+  // UI states
+  const [activeStory, setActiveStory] = useState(null);
+  const [storyProgress, setStoryProgress] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showSearch, setShowSearch] = useState(false);
+  const [commentText, setCommentText] = useState("");
+  const [activeCommentPost, setActiveCommentPost] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  
   const token = localStorage.getItem("token");
+  const postInputRef = useRef(null);
+  const storyInputRef = useRef(null);
 
-  /* ================= LOGOUT ================= */
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    window.location.href = "/";
+  /* ================= FETCH DATA FROM BACKEND ================= */
+  useEffect(() => {
+    if (token) {
+      fetchUserData();
+      fetchPosts();
+      fetchStories();
+      fetchReels();
+      fetchSuggestions();
+    }
+  }, [token]);
+
+  const fetchUserData = async () => {
+    try {
+      const response = await fetch(`${API}/profile/`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setCurrentUser({
+          username: data.username || "user",
+          fullName: data.full_name || data.username || "User",
+          profilePic: data.profile_pic || "",
+          isVerified: data.is_verified || false
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    }
   };
 
-  /* ================= FETCH ================= */
   const fetchPosts = async () => {
-    const res = await fetch(`${API}/posts/`);
-    const data = await res.json();
-    setPosts(data);
+    try {
+      const response = await fetch(`${API}/posts/`);
+      if (response.ok) {
+        const data = await response.json();
+        setPosts(data.map(post => ({
+          id: post.id,
+          user: post.user || post.username || "Unknown",
+          profilePic: post.user_profile_pic || "",
+          image: post.image || "",
+          video: post.video || "",
+          caption: post.caption || "",
+          likes: post.likes_count || post.likes || 0,
+          comments: post.comments_count || 0,
+          time: post.created_at ? formatTimeAgo(post.created_at) : "Just now",
+          location: post.location || "",
+          isLiked: post.is_liked || false,
+          isSaved: post.is_saved || false
+        })));
+      }
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const fetchStories = async () => {
-    const res = await fetch(`${API}/stories/`);
-    const data = await res.json();
-    setStories(data);
+    try {
+      const response = await fetch(`${API}/stories/`);
+      if (response.ok) {
+        const data = await response.json();
+        setStories(data.map(story => ({
+          id: story.id,
+          user: story.user || story.username || "Unknown",
+          image: story.image || story.media_url || "",
+          user_profile_pic: story.user_profile_pic || "",
+          created_at: story.created_at ? formatTimeAgo(story.created_at) : "Just now",
+          hasSeen: story.seen_by_current_user || false
+        })));
+      }
+    } catch (error) {
+      console.error("Error fetching stories:", error);
+    }
   };
 
   const fetchReels = async () => {
-    const res = await fetch(`${API}/reels/`);
-    const data = await res.json();
-    setReels(data);
+    try {
+      const response = await fetch(`${API}/reels/`);
+      if (response.ok) {
+        const data = await response.json();
+        setReels(data.map(reel => ({
+          id: reel.id,
+          user: reel.user || reel.username || "Unknown",
+          video: reel.video || reel.media_url || "",
+          caption: reel.caption || "",
+          likes: reel.likes_count || reel.likes || 0,
+          comments: reel.comments_count || 0
+        })));
+      }
+    } catch (error) {
+      console.error("Error fetching reels:", error);
+    }
+  };
+
+  const fetchSuggestions = async () => {
+    try {
+      // If your backend has a suggestions endpoint
+      const response = await fetch(`${API}/suggestions/`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setSuggestions(data);
+      } else {
+        // Fallback mock data
+        setSuggestions([
+          {
+            id: 1,
+            username: "chambigoth",
+            description: "Followed by rabbit__saman",
+            isFollowed: false
+          },
+          {
+            id: 2,
+            username: "McEight",
+            description: "Suggested for you",
+            isFollowed: false
+          },
+          {
+            id: 3,
+            username: "Vyahnavi_Hanha",
+            description: "Suggested for you",
+            isFollowed: false
+          },
+          {
+            id: 4,
+            username: "partyArchitects",
+            description: "Followed by beautiful_mercy",
+            isFollowed: false
+          }
+        ]);
+      }
+    } catch (error) {
+      console.error("Error fetching suggestions:", error);
+    }
   };
 
   const fetchMessages = async () => {
-    const res = await fetch(`${API}/messages/`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const data = await res.json();
-    setMessages(data);
-  };
-
-  const fetchMyProfile = async () => {
-    const res = await fetch(`${API}/profile/`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const data = await res.json();
-    setMyUsername(data.username);
-  };
-
-  useEffect(() => {
-    fetchPosts();
-    fetchStories();
-    fetchReels();
-    fetchMyProfile();
-  }, []);
-
-  /* ================= SEARCH ================= */
-  const handleSearch = async (value) => {
-    setSearchQuery(value);
-
-    if (!value.trim()) {
-      setSearchUsers([]);
-      setSearchPosts([]);
-      return;
+    try {
+      const response = await fetch(`${API}/messages/`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setMessages(data);
+      }
+    } catch (error) {
+      console.error("Error fetching messages:", error);
     }
-
-    const res = await fetch(`${API}/search/?q=${value}`);
-    const data = await res.json();
-
-    setSearchUsers(data.users || []);
-    setSearchPosts(data.posts || []);
   };
 
-  /* ================= WEBSOCKET (FIXED) ================= */
-  useEffect(() => {
-    if (activeTab !== "messages") return;
+  /* ================= UTILITY FUNCTIONS ================= */
+  const formatTimeAgo = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
 
-    fetchMessages();
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return new Date(date).toLocaleDateString();
+  };
 
-    socketRef.current = new WebSocket("ws://127.0.0.1:8000/ws/chat/");
+  /* ================= HANDLERS ================= */
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    window.location.href = "/login";
+  };
 
-    socketRef.current.onmessage = (e) => {
-      const data = JSON.parse(e.data);
-      setMessages((prev) => [...prev, data]);
-    };
+  const handleLike = async (postId) => {
+    try {
+      const response = await fetch(`${API}/posts/${postId}/like/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
 
-    socketRef.current.onerror = (e) => {
-      console.error("WebSocket error", e);
-    };
-
-    return () => socketRef.current?.close();
-  }, [activeTab]);
-
-  const sendMessage = () => {
-    if (!messageText.trim() || !receiver.trim()) return;
-    if (!socketRef.current || socketRef.current.readyState !== WebSocket.OPEN) {
-      alert("Socket not connected");
-      return;
+      if (response.ok) {
+        // Update local state
+        setPosts(posts.map(post => {
+          if (post.id === postId) {
+            const newLiked = !post.isLiked;
+            return {
+              ...post,
+              isLiked: newLiked,
+              likes: newLiked ? post.likes + 1 : post.likes - 1
+            };
+          }
+          return post;
+        }));
+      }
+    } catch (error) {
+      console.error("Error liking post:", error);
     }
-
-    const payload = {
-      sender: myUsername,
-      receiver: receiver,
-      text: messageText,
-    };
-
-    socketRef.current.send(JSON.stringify(payload));
-
-    setMessages((prev) => [...prev, payload]);
-    setMessageText("");
   };
 
-  /* ================= UPLOAD POST ================= */
+  const handleSave = async (postId) => {
+    try {
+      const response = await fetch(`${API}/posts/${postId}/save/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        setPosts(posts.map(post => 
+          post.id === postId 
+            ? { ...post, isSaved: !post.isSaved }
+            : post
+        ));
+      }
+    } catch (error) {
+      console.error("Error saving post:", error);
+    }
+  };
+
+  const handleFollow = async (userId) => {
+    try {
+      const response = await fetch(`${API}/users/${userId}/follow/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        setSuggestions(suggestions.map(user => 
+          user.id === userId 
+            ? { ...user, isFollowed: !user.isFollowed }
+            : user
+        ));
+      }
+    } catch (error) {
+      console.error("Error following user:", error);
+    }
+  };
+
+  const handleStoryClick = (story) => {
+    setActiveStory(story);
+    setStoryProgress(0);
+    
+    // Mark story as seen
+    if (!story.hasSeen) {
+      fetch(`${API}/stories/${story.id}/view/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      }).catch(err => console.error("Error marking story as seen:", err));
+    }
+  };
+
+  const closeStory = () => {
+    setActiveStory(null);
+    setStoryProgress(0);
+  };
+
   const handleUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     const formData = new FormData();
-    formData.append(
-      file.type.startsWith("video") ? "video" : "image",
-      file
-    );
-    formData.append("caption", "New post ✨");
+    if (file.type.startsWith('video')) {
+      formData.append('video', file);
+      // For reels
+      formData.append('caption', 'New reel 🎥');
+    } else {
+      formData.append('image', file);
+      formData.append('caption', 'New post 📸');
+    }
 
-    await fetch(`${API}/posts/create/`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-      body: formData,
-    });
+    try {
+      const response = await fetch(`${API}/posts/create/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
 
-    fetchPosts();
-    fetchReels();
+      if (response.ok) {
+        // Refresh posts
+        fetchPosts();
+        if (file.type.startsWith('video')) {
+          fetchReels();
+        }
+        alert('Post uploaded successfully!');
+      }
+    } catch (error) {
+      console.error("Error uploading post:", error);
+      alert('Error uploading post');
+    }
   };
 
-  /* ================= STORY UPLOAD ================= */
   const uploadStory = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     const formData = new FormData();
-    formData.append("image", file);
+    formData.append('image', file);
 
-    await fetch(`${API}/stories/upload/`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-      body: formData,
-    });
+    try {
+      const response = await fetch(`${API}/stories/upload/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
 
-    fetchStories();
+      if (response.ok) {
+        fetchStories();
+        alert('Story uploaded successfully!');
+      }
+    } catch (error) {
+      console.error("Error uploading story:", error);
+      alert('Error uploading story');
+    }
   };
 
-  /* ================= LIKE ================= */
-  const handleLike = async (id) => {
-    await fetch(`${API}/posts/${id}/like/`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    fetchPosts();
+  const submitComment = async (postId) => {
+    if (!commentText.trim()) return;
+
+    try {
+      const response = await fetch(`${API}/posts/${postId}/comment/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ text: commentText })
+      });
+
+      if (response.ok) {
+        setCommentText("");
+        setActiveCommentPost(null);
+        // Refresh posts to show new comment
+        fetchPosts();
+      }
+    } catch (error) {
+      console.error("Error posting comment:", error);
+    }
   };
 
-  /* ================= COMMENT ================= */
-  const submitComment = async (id) => {
-    if (!commentText) return;
+  const handleSearch = async (query) => {
+    setSearchQuery(query);
+    
+    if (!query.trim()) return;
 
-    await fetch(`${API}/posts/${id}/comment/`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ text: commentText }),
-    });
-
-    setCommentText("");
-    setActiveCommentPost(null);
-    fetchPosts();
+    try {
+      const response = await fetch(`${API}/search/?q=${encodeURIComponent(query)}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        // Handle search results based on your API response structure
+        console.log("Search results:", data);
+      }
+    } catch (error) {
+      console.error("Error searching:", error);
+    }
   };
 
-  /* ================= STORIES BAR (HOME) ================= */
-  const renderStoriesBar = () => {
-    const myStory = stories.find((s) => s.user === myUsername);
-    const otherStories = stories.filter((s) => s.user !== myUsername);
+  /* ================= COMPONENTS ================= */
 
-    return (
-      <div className="stories-bar">
-        {/* Your Story */}
-        <div
-          className="story-item"
-          onClick={() =>
-            myStory
-              ? handleStoryClick(myStory)
-              : storyInputRef.current.click()
-          }
-        >
-          <div className={`story-ring ${myStory ? "has-story" : "no-story"}`}>
-            {myStory ? (
-              <img src={myStory.image} alt="Your story" />
+  // Story Item Component
+  const StoryItem = ({ story, isUserStory = false }) => (
+    <div className="story-item" onClick={() => !isUserStory && handleStoryClick(story)}>
+      <div className={`story-ring ${story.hasSeen ? 'seen' : 'unseen'} ${isUserStory ? 'user-story' : ''}`}>
+        <div className="story-avatar">
+          {story.user_profile_pic ? (
+            <img src={story.user_profile_pic} alt={story.user} />
+          ) : (
+            <div className="avatar-initial">{story.user.charAt(0)}</div>
+          )}
+          {isUserStory && <div className="add-story">+</div>}
+        </div>
+      </div>
+      <span className="story-username">
+        {isUserStory ? "Your Story" : story.user}
+      </span>
+    </div>
+  );
+
+  // Suggestion Item Component
+  const SuggestionItem = ({ user }) => (
+    <div className="suggestion-item">
+      <div className="suggestion-user">
+        <div className="suggestion-avatar">
+          <div className="avatar-initial">{user.username.charAt(0)}</div>
+        </div>
+        <div className="suggestion-info">
+          <strong>{user.username}</strong>
+          <span>{user.description}</span>
+        </div>
+      </div>
+      <button 
+        className={`follow-btn ${user.isFollowed ? 'following' : ''}`}
+        onClick={() => handleFollow(user.id)}
+      >
+        {user.isFollowed ? 'Following' : 'Follow'}
+      </button>
+    </div>
+  );
+
+  // Post Component
+  const Post = ({ post }) => (
+    <div className="post-card">
+      {/* Post Header */}
+      <div className="post-header">
+        <div className="post-user">
+          <div className="post-avatar">
+            {post.profilePic ? (
+              <img src={post.profilePic} alt={post.user} />
             ) : (
-              <div className="add-story">+</div>
+              <div className="avatar-initial">{post.user.charAt(0)}</div>
             )}
           </div>
-          <p>Your Story</p>
+          <div className="post-user-info">
+            <div className="post-username">
+              <strong>{post.user}</strong>
+              {post.user === "chambigoth" && <span className="verified-badge">✓</span>}
+            </div>
+            {post.location && <span className="post-location">{post.location}</span>}
+          </div>
         </div>
+        <FiMoreHorizontal className="more-btn" />
+      </div>
 
-        {/* Others' Stories */}
-        {otherStories.map((s) => (
-          <div
-            key={s.id}
-            className="story-item"
-            onClick={() => handleStoryClick(s)}
+      {/* Post Image/Video */}
+      <div className="post-media-container">
+        {post.image && (
+          <img src={post.image} alt={post.caption} className="post-media" />
+        )}
+        {post.video && (
+          <video src={post.video} controls className="post-media" />
+        )}
+      </div>
+
+      {/* Post Actions */}
+      <div className="post-actions">
+        <div className="post-actions-left">
+          <button onClick={() => handleLike(post.id)}>
+            {post.isLiked ? <FaHeart className="liked" /> : <FaRegHeart />}
+          </button>
+          <button onClick={() => setActiveCommentPost(post.id === activeCommentPost ? null : post.id)}>
+            <FaRegComment />
+          </button>
+          <button><FiSend /></button>
+        </div>
+        <div className="post-actions-right">
+          <button onClick={() => handleSave(post.id)}>
+            {post.isSaved ? <BsBookmarkFill /> : <BsBookmark />}
+          </button>
+        </div>
+      </div>
+
+      {/* Post Info */}
+      <div className="post-info">
+        <strong>{post.likes.toLocaleString()} likes</strong>
+        <div className="post-caption">
+          <strong>{post.user}</strong> {post.caption}
+        </div>
+        {post.comments > 0 && (
+          <div className="view-comments">View all {post.comments} comments</div>
+        )}
+        <div className="post-time">{post.time}</div>
+      </div>
+
+      {/* Comment Input */}
+      {activeCommentPost === post.id && (
+        <div className="comment-input-container">
+          <input
+            type="text"
+            placeholder="Add a comment..."
+            value={commentText}
+            onChange={(e) => setCommentText(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && submitComment(post.id)}
+          />
+          <button 
+            className={`post-comment-btn ${commentText ? 'active' : ''}`}
+            onClick={() => submitComment(post.id)}
+            disabled={!commentText}
           >
-            <div className={`story-ring ${seenStories.has(s.id) ? "seen" : "unseen"}`}>
-              <img src={s.image} alt={s.user} />
-            </div>
-            <p>{s.user}</p>
-          </div>
-        ))}
+            Post
+          </button>
+        </div>
+      )}
+    </div>
+  );
 
-        {/* Hidden file input */}
-        <input
-          hidden
-          ref={storyInputRef}
-          type="file"
-          accept="image/*"
-          onChange={uploadStory}
-        />
+  // Reel Component
+  const Reel = ({ reel }) => (
+    <div className="reel">
+      <div className="reel-video">
+        <video src={reel.video} autoPlay muted loop />
       </div>
-    );
-  };
-
-  /* ================= STORY CLICK HANDLER ================= */
-  const handleStoryClick = (story) => {
-    setActiveStory(story);
-    setCurrentStoryIndex(stories.findIndex(s => s.id === story.id));
-    setStoryProgress(0);
-    
-    if (!seenStories.has(story.id)) {
-      setSeenStories(prev => new Set([...prev, story.id]));
-      // Optional: Mark as seen in backend
-      fetch(`${API}/stories/${story.id}/seen/`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` }
-      }).catch(err => console.log("Error marking story seen:", err));
-    }
-  };
-
-  /* ================= STORY PROGRESS ================= */
-  useEffect(() => {
-    if (!activeStory) return;
-
-    const interval = setInterval(() => {
-      setStoryProgress(prev => {
-        if (prev >= 100) {
-          const nextIndex = currentStoryIndex + 1;
-          if (nextIndex < stories.length) {
-            setCurrentStoryIndex(nextIndex);
-            setActiveStory(stories[nextIndex]);
-            return 0;
-          } else {
-            closeStoryViewer();
-            return 0;
-          }
-        }
-        return prev + 2;
-      });
-    }, 100);
-
-    return () => clearInterval(interval);
-  }, [activeStory, currentStoryIndex, stories]);
-
-  const closeStoryViewer = () => {
-    setActiveStory(null);
-    setCurrentStoryIndex(0);
-    setStoryProgress(0);
-  };
-
-  const goToNextStory = () => {
-    if (currentStoryIndex < stories.length - 1) {
-      const nextIndex = currentStoryIndex + 1;
-      setCurrentStoryIndex(nextIndex);
-      setActiveStory(stories[nextIndex]);
-      setStoryProgress(0);
-    } else {
-      closeStoryViewer();
-    }
-  };
-
-  const goToPrevStory = () => {
-    if (currentStoryIndex > 0) {
-      const prevIndex = currentStoryIndex - 1;
-      setCurrentStoryIndex(prevIndex);
-      setActiveStory(stories[prevIndex]);
-      setStoryProgress(0);
-    }
-  };
-
-  /* ================= STORY VIEWER ================= */
-  const renderStoryViewer = () => {
-    if (!activeStory) return null;
-
-    return (
-      <div className="story-viewer-overlay">
-        <div className="story-viewer">
-          {/* Progress bars */}
-          <div className="story-progress-container">
-            {stories.map((s, idx) => (
-              <div key={s.id} className="story-progress-track">
-                <div 
-                  className={`story-progress-bar ${idx === currentStoryIndex ? "active" : idx < currentStoryIndex ? "filled" : ""}`}
-                  style={idx === currentStoryIndex ? { width: `${storyProgress}%` } : {}}
-                />
-              </div>
-            ))}
+      <div className="reel-overlay">
+        <div className="reel-user">
+          <div className="reel-avatar">
+            <div className="avatar-initial">{reel.user.charAt(0)}</div>
           </div>
+          <strong>{reel.user}</strong>
+          <button className="follow-btn">Follow</button>
+        </div>
+        <div className="reel-caption">{reel.caption}</div>
+        <div className="reel-actions">
+          <button><AiOutlineHeart /></button>
+          <button><FaRegComment /></button>
+          <button><FiSend /></button>
+          <button><BsBookmark /></button>
+        </div>
+      </div>
+    </div>
+  );
 
-          {/* Close button */}
-          <MdClose className="story-close" onClick={closeStoryViewer} />
+  /* ================= MAIN VIEWS ================= */
 
-          {/* Story content */}
-          <div className="story-content">
-            <img src={activeStory.image} alt={activeStory.user} />
-          </div>
-
-          {/* Story info */}
-          <div className="story-info">
-            <div className="story-user">
-              <div className="story-user-pic">
-                {activeStory.user_profile_pic ? (
-                  <img src={activeStory.user_profile_pic} alt={activeStory.user} />
-                ) : (
-                  <div className="story-user-initial">{activeStory.user.charAt(0)}</div>
-                )}
+  // Home View
+  const renderHome = () => (
+    <div className="home-container">
+      {/* Main Feed */}
+      <div className="main-feed">
+        {/* Stories */}
+        {stories.length > 0 && (
+          <div className="stories-container">
+            <div className="stories-scroll">
+              <div 
+                className="story-item" 
+                onClick={() => storyInputRef.current?.click()}
+              >
+                <div className="story-ring user-story">
+                  <div className="story-avatar">
+                    {currentUser.profilePic ? (
+                      <img src={currentUser.profilePic} alt="You" />
+                    ) : (
+                      <div className="avatar-initial">{currentUser.username.charAt(0)}</div>
+                    )}
+                    <div className="add-story">+</div>
+                  </div>
+                </div>
+                <span className="story-username">Your Story</span>
               </div>
-              <div className="story-user-details">
-                <strong>{activeStory.user}</strong>
-                <span className="story-time">{activeStory.created_at}</span>
-              </div>
-            </div>
-            <div className="story-actions">
-              <input type="text" placeholder="Send message" />
-              <button><AiOutlineSend /></button>
-              <button><AiOutlineHeart /></button>
+              
+              {stories.map(story => (
+                <StoryItem key={story.id} story={story} />
+              ))}
             </div>
           </div>
+        )}
 
-          {/* Navigation arrows */}
-          <div className="story-nav-left" onClick={goToPrevStory}>
-            <BsChevronLeft />
+        {/* Posts */}
+        <div className="posts-container">
+          {isLoading ? (
+            <div className="loading">Loading posts...</div>
+          ) : posts.length > 0 ? (
+            posts.map(post => (
+              <Post key={post.id} post={post} />
+            ))
+          ) : (
+            <div className="no-posts">
+              <p>No posts yet. Follow people to see their posts!</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Sidebar */}
+      <div className="home-sidebar">
+        {/* Current User */}
+        <div className="sidebar-user">
+          <div className="user-avatar">
+            {currentUser.profilePic ? (
+              <img src={currentUser.profilePic} alt={currentUser.username} />
+            ) : (
+              <div className="avatar-initial">{currentUser.username.charAt(0)}</div>
+            )}
           </div>
-          <div className="story-nav-right" onClick={goToNextStory}>
-            <BsChevronRight />
+          <div className="user-info">
+            <strong>{currentUser.username}</strong>
+            <span>{currentUser.fullName}</span>
+          </div>
+          <button className="switch-btn">Switch</button>
+        </div>
+
+        {/* Suggestions */}
+        {suggestions.length > 0 && (
+          <div className="suggestions-section">
+            <div className="suggestions-header">
+              <span>Suggestions For You</span>
+              <button className="see-all">See All</button>
+            </div>
+            <div className="suggestions-list">
+              {suggestions.map(user => (
+                <SuggestionItem key={user.id} user={user} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Footer Links */}
+        <div className="sidebar-footer">
+          <div className="footer-links">
+            <a href="#">About</a> • <a href="#">Help</a> • <a href="#">Press</a> • <a href="#">API</a> • <a href="#">Jobs</a> • 
+            <a href="#">Privacy</a> • <a href="#">Terms</a> • <a href="#">Locations</a> • <a href="#">Language</a>
+          </div>
+          <div className="copyright">
+            © 2025 HFUN FROM META
           </div>
         </div>
       </div>
-    );
-  };
+    </div>
+  );
 
-  /* ================= STORIES TAB ================= */
-  const renderStories = () => (
-    <div className="stories-tab">
-      <h2>All Stories</h2>
-      <div className="stories-grid">
-        {stories.length === 0 ? (
-          <p className="no-stories">No stories available</p>
-        ) : (
-          stories.map((s) => (
-            <div
-              key={s.id}
-              className="story-card"
-              onClick={() => handleStoryClick(s)}
-            >
-              <div className="story-card-image">
-                <img src={s.image} alt={s.user} />
-              </div>
-              <div className="story-card-info">
-                <div className="story-card-user-pic">
-                  {s.user_profile_pic ? (
-                    <img src={s.user_profile_pic} alt={s.user} />
-                  ) : (
-                    <div className="story-card-initial">{s.user.charAt(0)}</div>
-                  )}
-                </div>
-                <div className="story-card-details">
-                  <strong>{s.user}</strong>
-                  <span>{s.created_at}</span>
-                </div>
-              </div>
-            </div>
-          ))
+  // Search View
+  const renderSearch = () => (
+    <div className="search-page">
+      <div className="search-container">
+        <div className="search-header">
+          <AiOutlineSearch />
+          <input
+            placeholder="Search users or posts..."
+            value={searchQuery}
+            onChange={(e) => handleSearch(e.target.value)}
+            autoFocus
+          />
+        </div>
+        {searchQuery && (
+          <div className="search-results">
+            <p>Search results for: {searchQuery}</p>
+            {/* Search results would go here */}
+          </div>
         )}
       </div>
     </div>
   );
 
-  /* ================= REELS ================= */
-  const renderReels = () => {
-    const videoPosts = posts.filter((p) => p.video);
-    const allReels = [...reels, ...videoPosts];
-
-    return (
-      <div className="home-feed">
-        {allReels.map((r) => (
-          <div key={r.id} className="insta-post">
-            <div className="post-header">
-              <strong>{r.user}</strong>
-            </div>
-
-            <video
-              src={r.video}
-              className="post-image"
-              autoPlay
-              muted
-              loop
-            />
-
-            <div className="post-actions">
-              <AiOutlineHeart />
-              <AiOutlineComment />
-              <AiOutlineShareAlt />
-            </div>
-
-            <div className="post-info">
-              <strong>{r.likes || 0} likes</strong>
+  // Messages View
+  const renderMessages = () => (
+    <div className="messages-page">
+      <div className="messages-container">
+        <div className="messages-sidebar">
+          <div className="messages-header">
+            <h2>{currentUser.username}</h2>
+            <div className="messages-actions">
+              <AiOutlinePlusSquare />
+              <MdSlowMotionVideo />
             </div>
           </div>
-        ))}
+          <div className="messages-list">
+            {messages.length > 0 ? (
+              messages.map(msg => (
+                <div key={msg.id} className="message-preview">
+                  <div className="message-avatar">
+                    <div className="avatar-initial">{msg.sender?.charAt(0) || "U"}</div>
+                  </div>
+                  <div className="message-info">
+                    <div className="message-user">
+                      <strong>{msg.sender}</strong>
+                      <span className="message-time">{msg.time}</span>
+                    </div>
+                    <span className="message-text">{msg.text || msg.lastMessage}</span>
+                  </div>
+                  {msg.unread && <div className="unread-dot"></div>}
+                </div>
+              ))
+            ) : (
+              <div className="no-messages">
+                <p>No messages yet</p>
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="chat-area">
+          <div className="chat-header">
+            <div className="chat-user">
+              <div className="chat-avatar">
+                <div className="avatar-initial">U</div>
+              </div>
+              <div className="chat-user-info">
+                <strong>Select a conversation</strong>
+                <span>Start a new message</span>
+              </div>
+            </div>
+          </div>
+          <div className="chat-welcome">
+            <h3>Your Messages</h3>
+            <p>Send private messages to friends</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Reels View
+  const renderReels = () => (
+    <div className="reels-page">
+      <div className="reels-container">
+        {reels.length > 0 ? (
+          reels.map(reel => (
+            <Reel key={reel.id} reel={reel} />
+          ))
+        ) : (
+          <div className="no-reels">
+            <p>No reels yet</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  // Profile View
+  const renderProfile = () => (
+    <div className="profile-page">
+      <div className="profile-header">
+        <div className="profile-avatar">
+          {currentUser.profilePic ? (
+            <img src={currentUser.profilePic} alt={currentUser.username} />
+          ) : (
+            <div className="avatar-initial-large">{currentUser.username.charAt(0)}</div>
+          )}
+        </div>
+        <div className="profile-info">
+          <div className="profile-username">
+            <h2>{currentUser.username}</h2>
+            {currentUser.isVerified && <span className="verified-badge">✓</span>}
+            <button className="edit-profile">Edit Profile</button>
+          </div>
+          <div className="profile-stats">
+            <div className="stat">
+              <strong>{posts.length}</strong>
+              <span>posts</span>
+            </div>
+            <div className="stat">
+              <strong>0</strong>
+              <span>followers</span>
+            </div>
+            <div className="stat">
+              <strong>0</strong>
+              <span>following</span>
+            </div>
+          </div>
+          <div className="profile-bio">
+            <p>{currentUser.fullName}</p>
+          </div>
+        </div>
+      </div>
+      <div className="profile-posts">
+        <h3>Posts</h3>
+        {posts.length > 0 ? (
+          <div className="posts-grid">
+            {posts.map(post => (
+              <div key={post.id} className="profile-post">
+                {post.image && <img src={post.image} alt="" />}
+                {post.video && <video src={post.video} />}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="no-posts-profile">
+            <p>No posts yet</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  // Story Viewer
+  const renderStoryViewer = () => {
+    if (!activeStory) return null;
+
+    return (
+      <div className="story-overlay">
+        <div className="story-viewer">
+          <div className="story-progress">
+            <div 
+              className="progress-bar"
+              style={{ width: `${storyProgress}%` }}
+            ></div>
+          </div>
+          <div className="story-header">
+            <div className="story-user-info">
+              <div className="story-avatar">
+                {activeStory.user_profile_pic ? (
+                  <img src={activeStory.user_profile_pic} alt={activeStory.user} />
+                ) : (
+                  <div className="avatar-initial">{activeStory.user.charAt(0)}</div>
+                )}
+              </div>
+              <span className="story-username">{activeStory.user}</span>
+              <span className="story-time">{activeStory.created_at}</span>
+            </div>
+            <MdClose className="close-btn" onClick={closeStory} />
+          </div>
+          <div className="story-content">
+            <img src={activeStory.image || "https://images.unsplash.com/photo-1506744038136-46273834b3fb"} alt="" />
+          </div>
+          <div className="story-footer">
+            <input type="text" placeholder="Send message" />
+            <button><AiOutlineHeart /></button>
+            <button><AiOutlineSend /></button>
+          </div>
+        </div>
       </div>
     );
   };
 
-  /* ================= HOME ================= */
-  const renderHome = () => (
-    <div className="home-feed">
-      {/* Stories Bar */}
-      {renderStoriesBar()}
-
-      {/* Posts */}
-      {posts.map((p) => (
-        <div key={p.id} className="insta-post">
-          <div className="post-header">
-            <strong>{p.user}</strong>
-          </div>
-
-          {p.image && <img src={p.image} className="post-image" alt="post" />}
-          {p.video && <video src={p.video} className="post-image" controls />}
-
-          <div className="post-actions">
-            {p.liked ? (
-              <AiFillHeart color="red" onClick={() => handleLike(p.id)} />
-            ) : (
-              <AiOutlineHeart onClick={() => handleLike(p.id)} />
-            )}
-            <AiOutlineComment
-              onClick={() => setActiveCommentPost(p.id)}
-            />
-            <AiOutlineShareAlt />
-          </div>
-
-          <div className="post-info">
-            <strong>{p.likes} likes</strong>
-          </div>
-
-          <p className="post-info">
-            <strong>{p.user}</strong> {p.caption}
-          </p>
-
-          {activeCommentPost === p.id && (
-            <div className="comment-box">
-              <input
-                placeholder="Add a comment..."
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-              />
-              <button onClick={() => submitComment(p.id)}>Post</button>
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-
-  /* ================= MESSAGES UI ================= */
-  const renderMessages = () => (
-    <div className="messages-page">
-      <h2>Messages</h2>
-
-      <div className="messages-list">
-        {messages.map((m, i) => (
-          <div key={i} className="message-item">
-            <strong>{m.sender}:</strong> {m.text}
-          </div>
-        ))}
-      </div>
-
-      <div className="message-input">
-        <input
-          placeholder="Receiver username"
-          value={receiver}
-          onChange={(e) => setReceiver(e.target.value)}
-        />
-        <input
-          placeholder="Type a message..."
-          value={messageText}
-          onChange={(e) => setMessageText(e.target.value)}
-        />
-        <button onClick={sendMessage}>Send</button>
-      </div>
-    </div>
-  );
-
-  /* ================= SEARCH UI ================= */
-  const renderSearch = () => (
-    <div className="search-page">
-      <input
-        className="search-input"
-        placeholder="Search users or posts..."
-        value={searchQuery}
-        onChange={(e) => handleSearch(e.target.value)}
-      />
-      
-      {searchUsers.length > 0 && (
-        <div className="search-results">
-          <h3>Users</h3>
-          {searchUsers.map(user => (
-            <div key={user.id} className="search-user-item">
-              <img src={user.profile_pic} alt={user.username} />
-              <span>{user.username}</span>
-            </div>
-          ))}
-        </div>
-      )}
-      
-      {searchPosts.length > 0 && (
-        <div className="search-results">
-          <h3>Posts</h3>
-          {searchPosts.map(post => (
-            <div key={post.id} className="search-post-item">
-              <img src={post.image} alt="post" />
-              <span>{post.caption}</span>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-
-  /* ================= SWITCH ================= */
-  const renderContent = () => {
-    switch (activeTab) {
-      case "home":
-        return renderHome();
-      case "search":
-        return renderSearch();
-      case "stories":
-        return renderStories();
-      case "reels":
-        return renderReels();
-      case "messages":
-        return renderMessages();
-      case "upload":
-        return (
-          <div className="upload-page">
-            <h2>Upload</h2>
-            <input type="file" onChange={handleUpload} />
-          </div>
-        );
-      case "profile":
-        return <Profile />;
-      default:
-        return null;
-    }
-  };
-
+  /* ================= MAIN RENDER ================= */
   return (
-    <div className="layout">
-      <aside className="sidebar">
-        <h1>Hfun</h1>
+    <div className="hfun-app">
+      {/* Top Navigation */}
+      <nav className="top-nav">
+        <div className="nav-container">
+          {/* Logo */}
+          <div className="nav-logo" onClick={() => setActiveTab("home")}>
+            <div className="logo-icon">
+              {/* You can use a custom Hfun icon or keep Instagram style */}
+              <div className="hfun-logo">Hfun</div>
+            </div>
+          </div>
 
-        <div onClick={() => setActiveTab("home")}>
-          <AiFillHome /> Home
-        </div>
-        <div onClick={() => setActiveTab("search")}>
-          <FiSearch /> Search
-        </div>
-        <div onClick={() => setActiveTab("messages")}>
-          <BsMessenger /> Messages
-        </div>
-        <div onClick={() => setActiveTab("stories")}>
-          <AiOutlineEye /> Stories
-        </div>
-        <div onClick={() => setActiveTab("reels")}>
-          <MdSlowMotionVideo /> Reels
-        </div>
-        <div onClick={() => setActiveTab("upload")}>
-          <FiUpload /> Upload
-        </div>
-        <div onClick={() => setActiveTab("profile")}>
-          <RiUser3Line /> Profile
-        </div>
+          {/* Search */}
+          <div className="nav-search">
+            <AiOutlineSearch />
+            <input
+              placeholder="Search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => setShowSearch(true)}
+              onBlur={() => setTimeout(() => setShowSearch(false), 200)}
+            />
+            {showSearch && searchQuery && (
+              <div className="search-dropdown">
+                <div className="search-dropdown-item">
+                  <span>Search for "{searchQuery}"</span>
+                </div>
+              </div>
+            )}
+          </div>
 
-        <div onClick={handleLogout} className="logout-btn">
-          Logout
+          {/* Navigation Icons */}
+          <div className="nav-icons">
+            <button 
+              className={`nav-icon ${activeTab === "home" ? "active" : ""}`}
+              onClick={() => setActiveTab("home")}
+            >
+              {activeTab === "home" ? <AiFillHome /> : <AiOutlineHome />}
+            </button>
+            
+            <button 
+              className={`nav-icon ${activeTab === "messages" ? "active" : ""}`}
+              onClick={() => {
+                setActiveTab("messages");
+                fetchMessages();
+              }}
+            >
+              {activeTab === "messages" ? <FaFacebookMessenger /> : <BsMessenger />}
+            </button>
+            
+            <button 
+              className="nav-icon"
+              onClick={() => postInputRef.current?.click()}
+              title="Create Post"
+            >
+              <AiOutlinePlusSquare />
+            </button>
+            
+            <button 
+              className={`nav-icon ${activeTab === "reels" ? "active" : ""}`}
+              onClick={() => setActiveTab("reels")}
+            >
+              <BiMoviePlay />
+            </button>
+            
+            <button 
+              className={`nav-icon ${activeTab === "search" ? "active" : ""}`}
+              onClick={() => setActiveTab("search")}
+            >
+              <AiOutlineSearch />
+            </button>
+            
+            <button 
+              className={`nav-icon ${activeTab === "profile" ? "active" : ""}`}
+              onClick={() => setActiveTab("profile")}
+              title="Profile"
+            >
+              <RiUser3Line />
+            </button>
+            
+            <button 
+              className="nav-icon logout-btn"
+              onClick={handleLogout}
+              title="Logout"
+            >
+              <span>Logout</span>
+            </button>
+          </div>
         </div>
-      </aside>
+      </nav>
 
-      <main className="content">
-        <div className="top-bar">Hfun</div>
-        {renderContent()}
-        {renderStoryViewer()}
+      {/* Main Content */}
+      <main className="main-content">
+        {activeTab === "home" && renderHome()}
+        {activeTab === "search" && renderSearch()}
+        {activeTab === "messages" && renderMessages()}
+        {activeTab === "reels" && renderReels()}
+        {activeTab === "profile" && renderProfile()}
       </main>
+
+      {/* Hidden Inputs */}
+      <input 
+        hidden 
+        ref={postInputRef} 
+        type="file" 
+        accept="image/*,video/*" 
+        onChange={handleUpload} 
+      />
+      <input 
+        hidden 
+        ref={storyInputRef} 
+        type="file" 
+        accept="image/*" 
+        onChange={uploadStory} 
+      />
+
+      {/* Story Viewer */}
+      {renderStoryViewer()}
     </div>
   );
 }
